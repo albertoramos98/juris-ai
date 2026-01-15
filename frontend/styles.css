@@ -1,0 +1,369 @@
+/* =====================
+   DESIGN TOKENS
+===================== */
+:root{
+  --bg: #0b1220;
+  --surface: #0f172a;     /* slate-900 */
+  --card: #111c33;        /* custom */
+  --muted: rgba(255,255,255,.08);
+  --muted-2: rgba(255,255,255,.12);
+  --text: rgba(255,255,255,.92);
+  --text-dim: rgba(255,255,255,.70);
+  --text-faint: rgba(255,255,255,.52);
+
+  --primary: #4f8cff;
+  --primary-2: #2f6bff;
+  --danger: #ff4d4f;
+  --warn: #ffb020;
+  --ok: #22c55e;
+
+  --radius: 16px;
+  --radius-sm: 12px;
+
+  --shadow: 0 12px 35px rgba(0,0,0,.35);
+  --shadow-soft: 0 8px 22px rgba(0,0,0,.22);
+
+  --ring: 0 0 0 4px rgba(79,140,255,.25);
+}
+
+/* =====================
+   RESET
+===================== */
+*{ box-sizing:border-box; }
+html, body{ height:100%; }
+body{
+  margin:0;
+  padding:24px;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", Helvetica, sans-serif;
+  background:
+    radial-gradient(1200px 700px at 20% -10%, rgba(79,140,255,.18), transparent 60%),
+    radial-gradient(900px 600px at 100% 0%, rgba(255,176,32,.10), transparent 55%),
+    radial-gradient(900px 600px at 10% 110%, rgba(34,197,94,.10), transparent 55%),
+    var(--bg);
+  color: var(--text);
+}
+
+/* =====================
+   LAYOUT HELPERS
+===================== */
+a{ color:inherit; text-decoration:none; }
+ul{ margin:0; padding:0; list-style:none; }
+button, input, select{ font:inherit; }
+
+/* =====================
+   TOPBAR
+===================== */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+  padding:14px 16px;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border: 1px solid var(--muted);
+  box-shadow: var(--shadow-soft);
+}
+
+.topbar h1{
+  margin:0;
+  font-size: 18px;
+  letter-spacing: .2px;
+}
+.topbar h1::after{
+  content:"";
+  display:inline-block;
+  width:8px; height:8px;
+  border-radius:999px;
+  background: var(--primary);
+  margin-left:10px;
+  box-shadow: 0 0 0 4px rgba(79,140,255,.18);
+}
+
+/* =====================
+   BUTTONS
+===================== */
+button{
+  border:1px solid rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(79,140,255,.95), rgba(47,107,255,.95));
+  color:white;
+  padding:10px 14px;
+  border-radius: 12px;
+  cursor:pointer;
+  box-shadow: 0 10px 22px rgba(47,107,255,.22);
+  transition: transform .08s ease, filter .15s ease, box-shadow .15s ease;
+}
+button:hover{
+  filter: brightness(1.05);
+  box-shadow: 0 14px 28px rgba(47,107,255,.26);
+}
+button:active{
+  transform: translateY(1px);
+}
+button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+
+button.secondary{
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+  box-shadow:none;
+}
+button.danger{
+  background: linear-gradient(180deg, rgba(255,77,79,.95), rgba(220,38,38,.95));
+  box-shadow: 0 10px 22px rgba(255,77,79,.20);
+}
+
+/* =====================
+   INPUTS / SELECTS
+===================== */
+input, select{
+  width:100%;
+  padding:10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  outline:none;
+  transition: box-shadow .15s ease, border-color .15s ease, background .15s ease;
+}
+
+input::placeholder{ color: rgba(255,255,255,.45); }
+input:focus, select:focus{
+  border-color: rgba(79,140,255,.55);
+  box-shadow: var(--ring);
+  background: rgba(255,255,255,.07);
+}
+
+select option{
+  background:#0f172a;
+  color: white;
+}
+
+/* =====================
+   TOP CARDS
+===================== */
+.cards{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 18px 0 20px;
+}
+
+.card{
+  border-radius: var(--radius);
+  border: 1px solid var(--muted);
+  background:
+    radial-gradient(700px 350px at 0% 0%, rgba(79,140,255,.14), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  box-shadow: var(--shadow-soft);
+  padding: 16px;
+  text-align:left;
+  overflow:hidden;
+  position:relative;
+}
+.card h3{
+  margin:0;
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 600;
+  letter-spacing: .25px;
+}
+.card span{
+  display:block;
+  margin-top:10px;
+  font-size: 28px;
+  font-weight: 800;
+  color: white;
+}
+.card::after{
+  content:"";
+  position:absolute;
+  right:-40px; top:-40px;
+  width:120px; height:120px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  filter: blur(0.2px);
+}
+
+/* =====================
+   GRID / BOXES
+===================== */
+.grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.box{
+  border-radius: var(--radius);
+  border: 1px solid var(--muted);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  box-shadow: var(--shadow-soft);
+  padding: 16px;
+}
+
+.box h2{
+  margin:0 0 12px 0;
+  font-size: 16px;
+  letter-spacing: .2px;
+}
+
+/* =====================
+   FORMS
+===================== */
+.form-box{
+  border-radius: var(--radius-sm);
+  border: 1px dashed rgba(255,255,255,.14);
+  background: rgba(255,255,255,.04);
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.form-box h3{
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+.form-box input,
+.form-box select{
+  margin-bottom: 10px;
+}
+
+.form-box button{
+  width:100%;
+}
+
+/* =====================
+   CHECKBOX (bonito)
+===================== */
+label{
+  color: var(--text-dim);
+}
+
+label input[type="checkbox"]{
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+label.checkbox{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.05);
+}
+
+/* Se você usar o label como no HTML que te passei, ele já fica ok */
+label[style*="display:flex"]{
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.05);
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+/* =====================
+   LIST ITEMS (cards)
+===================== */
+ul li{
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  margin-bottom: 10px;
+  color: var(--text);
+  box-shadow: 0 8px 18px rgba(0,0,0,.18);
+}
+
+ul li:last-child{ margin-bottom: 0; }
+
+/* =====================
+   DEADLINES VISUAL STATES
+===================== */
+.deadline-done{
+  opacity: .65;
+  text-decoration: line-through;
+}
+
+.deadline-expired{
+  border-color: rgba(255,77,79,.35);
+  background: rgba(255,77,79,.10);
+}
+
+.deadline-today{
+  border-color: rgba(255,176,32,.35);
+  background: rgba(255,176,32,.10);
+}
+
+.deadline-soon{
+  border-color: rgba(79,140,255,.35);
+  background: rgba(79,140,255,.10);
+}
+
+/* =====================
+   LOCK OVERLAY
+===================== */
+#lock-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.78);
+  backdrop-filter: blur(6px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.lock-box{
+  width: min(520px, 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background:
+    radial-gradient(900px 480px at 0% 0%, rgba(255,77,79,.18), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.lock-box h2{
+  margin: 0 0 6px 0;
+  color: rgba(255,255,255,.95);
+  font-size: 18px;
+  letter-spacing: .2px;
+}
+
+.lock-box p{
+  margin: 8px 0 0 0;
+  color: var(--text-dim);
+}
+
+.lock-box h3{
+  margin: 14px 0 8px 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: .2px;
+}
+
+.lock-box ul li{
+  background: rgba(255,77,79,.10);
+  border-color: rgba(255,77,79,.25);
+  box-shadow:none;
+}
+
+/* =====================
+   RESPONSIVE
+===================== */
+@media (max-width: 860px){
+  .cards{ grid-template-columns: 1fr; }
+  body{ padding: 16px; }
+  .grid{ grid-template-columns: 1fr; }
+}

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard - Juris AI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <h1>Dashboard</h1>
+  <button onclick="logout()">Sair</button>
+</header>
+
+<section class="cards">
+  <div class="card">
+    <h3>Clientes</h3>
+    <span id="clients-count">0</span>
+  </div>
+  <div class="card">
+    <h3>Processos</h3>
+    <span id="processes-count">0</span>
+  </div>
+  <div class="card">
+    <h3>Prazos</h3>
+    <span id="deadlines-count">0</span>
+  </div>
+</section>
+
+<section class="grid">
+
+  <!-- CLIENTES -->
+  <div class="box">
+    <h2>Clientes</h2>
+
+    <div class="form-box">
+      <h3>Novo Cliente</h3>
+      <input id="client-name" placeholder="Nome do cliente" />
+      <input id="client-doc" placeholder="CPF/CNPJ" />
+      <button onclick="createClient()">Criar Cliente</button>
+    </div>
+
+    <ul id="clients-list"></ul>
+  </div>
+
+  <!-- PROCESSOS -->
+  <div class="box">
+    <h2>Processos</h2>
+
+    <div class="form-box">
+      <h3>Novo Processo</h3>
+      <input id="process-number" placeholder="Número do processo" />
+      <input id="process-court" placeholder="Vara" />
+      <input id="process-type" placeholder="Tipo de ação" />
+
+      <select id="process-client-select">
+        <option value="">Selecione o cliente</option>
+      </select>
+
+      <button onclick="createProcess()">Criar Processo</button>
+    </div>
+
+    <ul id="processes-list"></ul>
+  </div>
+
+  <!-- PRAZOS -->
+  <div class="box">
+    <h2>Prazos</h2>
+
+    <div class="form-box">
+      <h3>Novo Prazo</h3>
+      <input id="deadline-desc" placeholder="Descrição" />
+      <input id="deadline-date" type="date" />
+      <input id="deadline-resp" placeholder="Responsável" />
+
+      <label class="checkbox">
+  <input id="deadline-critical" type="checkbox" />
+  Prazo crítico
+</label>
+
+
+      <select id="deadline-process-select">
+        <option value="">Selecione o processo</option>
+      </select>
+
+      <button onclick="createDeadline()">Criar Prazo</button>
+    </div>
+
+    <ul id="deadlines-list"></ul>
+  </div>
+
+</section>
+
+<script type="module" src="app.js"></script>
+
+<!-- OVERLAY DE BLOQUEIO (LETRA A) -->
+<div id="lock-overlay" style="display:none;">
+  <div class="lock-box">
+    <h2>⛔ ESCRITÓRIO BLOQUEADO</h2>
+
+    <!-- o JS escreve aqui quando vier /system/status ou 423 -->
+    <p id="lock-message" style="margin-top: 8px;">
+      Existe prazo crítico vencido não concluído.
+    </p>
+
+    <div style="margin-top: 12px;">
+      <h3 style="margin: 0 0 8px 0;">Críticos vencidos</h3>
+      <ul id="lock-deadlines" style="margin:0; padding-left: 18px;"></ul>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top: 16px;">
+      <button onclick="location.reload()">Recarregar</button>
+      <button onclick="logout()">Sair</button>
+    </div>
+
+    <p style="opacity:0.8; margin-top: 12px; font-size: 14px;">
+      Para destravar: conclua o(s) prazo(s) crítico(s) vencido(s).
+    </p>
+  </div>
+</div>
+
+</body>
+</html>

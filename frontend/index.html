@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Juris AI - Login</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body style="display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px;">
+  <div class="box" style="max-width:420px; width:100%; padding:18px;">
+    <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:14px;">
+      <h1 style="margin:0; font-size:22px; letter-spacing:.2px;">Juris AI</h1>
+      <p style="margin:0; color: rgba(255,255,255,.70); font-size:14px;">
+        Entre para acessar seu escritório.
+      </p>
+    </div>
+
+    <div class="form-box" style="margin-bottom:12px;">
+      <h3>Login</h3>
+
+      <input id="email" placeholder="Email" autocomplete="username" />
+      <input id="password" type="password" placeholder="Senha" autocomplete="current-password" />
+
+      <button onclick="login()" style="margin-top:2px;">Entrar</button>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; gap:10px; color: rgba(255,255,255,.55); font-size:12px;">
+      <span>Ambiente local</span>
+      <span id="apiHint">API: http://127.0.0.1:8000</span>
+    </div>
+  </div>
+
+  <!-- IMPORTANT: login.js agora deveria ser type="module" se você estiver usando imports.
+       Se o seu login.js não usa imports, pode deixar como está.
+  -->
+<script type="module" src="login.js"></script>
+
+</body>
+</html>
