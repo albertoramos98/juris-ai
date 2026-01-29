@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Processos - Juris AI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div>
+        <strong>Juris AI</strong><br/>
+        <span>Processos</span>
+      </div>
+      <span style="width:10px;height:10px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 4px rgba(79,140,255,.18)"></span>
+    </div>
+
+    <nav class="nav">
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="documents.html">📁 Documentos</a>
+      <a class="active" href="process.html">📌 Processos</a>
+      <a href="attacks.html">⚔️ Ataque & Defesa</a>
+      <a href="import.html">⬆️ Import CSV</a>
+
+
+      <div class="hint">
+        Aqui é a tela de “detalhe”. Prazos + docs por processo.
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <header class="topbar">
+      <h1>Processos</h1>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="secondary" id="btnRefresh">Recarregar</button>
+        <button onclick="logout()">Sair</button>
+      </div>
+    </header>
+
+    <section class="grid">
+
+      <div class="box">
+        <h2>Selecionar</h2>
+
+        <div class="form-box">
+          <h3>Processo</h3>
+          <select id="processSelect">
+            <option value="">Carregando...</option>
+          </select>
+          <div class="muted" style="margin-top:8px;" id="processMeta"></div>
+        </div>
+
+        <div class="form-box">
+          <h3>Criar prazo nesse processo</h3>
+          <input id="deadline-desc" placeholder="Descrição" />
+          <input id="deadline-date" type="date" />
+          <input id="deadline-resp" placeholder="Responsável" />
+
+          <label class="checkbox">
+            <input id="deadline-critical" type="checkbox" />
+            Prazo crítico
+          </label>
+
+          <button id="btnCreateDeadline" disabled>Criar prazo</button>
+        </div>
+
+        <div class="form-box">
+          <h3>Upload de doc nesse processo</h3>
+          <select id="docCategory">
+            <option value="inicial">Inicial</option>
+            <option value="procuracao">Procuração</option>
+            <option value="contrato">Contrato</option>
+            <option value="docs_cliente">Docs do Cliente</option>
+            <option value="outros">Outros</option>
+          </select>
+          <input type="file" id="docFile" />
+          <button id="btnUploadDoc" disabled>Upload</button>
+        </div>
+      </div>
+
+      <div class="box">
+        <h2>Prazos do processo</h2>
+        <div id="deadlinesList" style="margin-top:12px;">
+          <p class="muted">Selecione um processo.</p>
+        </div>
+      </div>
+
+      <div class="box">
+        <h2>Docs do processo</h2>
+        <div id="docsList" style="margin-top:12px;">
+          <p class="muted">Selecione um processo.</p>
+        </div>
+      </div>
+
+    </section>
+
+    <script type="module" src="process.js"></script>
+  </main>
+</div>
+
+</body>
+</html>

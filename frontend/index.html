@@ -18,13 +18,20 @@
 
     <div class="form-box" style="margin-bottom:12px;">
       <h3>Login</h3>
+      <button id="btn-google">Entrar com Google</button>
+<script type="module">
+  import "./login.js";
+  document.getElementById("btn-google").addEventListener("click", () => window.loginGoogle());
+</script>
+
 
       <input id="email" placeholder="Email" autocomplete="username" />
       <input id="password" type="password" placeholder="Senha" autocomplete="current-password" />
+     
 
       <button onclick="login()" style="margin-top:2px;">Entrar</button>
     </div>
-
+ 
     <div style="display:flex; justify-content:space-between; gap:10px; color: rgba(255,255,255,.55); font-size:12px;">
       <span>Ambiente local</span>
       <span id="apiHint">API: http://127.0.0.1:8000</span>

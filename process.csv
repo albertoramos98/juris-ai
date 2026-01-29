@@ -1,0 +1,52 @@
+number,client_name,court,type,status
+150.0001,João Silva,2ª Vara Cível,Defesa,ativo
+150.0002,Maria Souza,1ª Vara do Trabalho,Ataque,ativo
+number,client_name,court,type,status
+1500983-45.2023.8.17.0001,João Silva,1ª Vara Cível,Defesa,ativo
+1501021-12.2023.8.17.0001,João Silva,1ª Vara Cível,Ataque,ativo
+1501345-77.2023.8.17.0002,Maria Souza,2ª Vara Cível,Defesa,ativo
+1501678-09.2023.8.17.0002,Maria Souza,2ª Vara Cível,Ataque,ativo
+1501987-66.2023.8.17.0003,Carlos Pereira,3ª Vara Cível,Defesa,ativo
+1502234-18.2023.8.17.0003,Carlos Pereira,3ª Vara Cível,Ataque,ativo
+1502567-90.2023.8.17.0004,Ana Paula,1ª Vara do Trabalho,Defesa,ativo
+1502890-33.2023.8.17.0004,Ana Paula,1ª Vara do Trabalho,Ataque,ativo
+1503123-54.2023.8.17.0005,Fernando Lima,2ª Vara do Trabalho,Defesa,ativo
+1503456-81.2023.8.17.0005,Fernando Lima,2ª Vara do Trabalho,Ataque,ativo
+1503789-27.2023.8.17.0006,Luciana Rocha,Juizado Especial Cível,Defesa,ativo
+1504012-68.2023.8.17.0006,Luciana Rocha,Juizado Especial Cível,Ataque,ativo
+1504345-05.2023.8.17.0007,Rafael Costa,1ª Vara Criminal,Defesa,ativo
+1504678-92.2023.8.17.0007,Rafael Costa,1ª Vara Criminal,Ataque,ativo
+1504987-31.2023.8.17.0008,Patrícia Nogueira,2ª Vara Criminal,Defesa,ativo
+1505234-74.2023.8.17.0008,Patrícia Nogueira,2ª Vara Criminal,Ataque,ativo
+1505567-19.2023.8.17.0009,Bruno Martins,4ª Vara Cível,Defesa,ativo
+1505890-60.2023.8.17.0009,Bruno Martins,4ª Vara Cível,Ataque,ativo
+1506123-08.2023.8.17.0010,Juliana Pacheco,5ª Vara Cível,Defesa,ativo
+1506456-41.2023.8.17.0010,Juliana Pacheco,5ª Vara Cível,Ataque,ativo
+1506789-85.2023.8.17.0011,Diego Alves,Juizado Especial Criminal,Defesa,ativo
+1507012-22.2023.8.17.0011,Diego Alves,Juizado Especial Criminal,Ataque,ativo
+1507345-69.2023.8.17.0012,Renata Farias,6ª Vara Cível,Defesa,ativo
+1507678-10.2023.8.17.0012,Renata Farias,6ª Vara Cível,Ataque,ativo
+1507987-57.2023.8.17.0013,Thiago Moreira,3ª Vara do Trabalho,Defesa,ativo
+1508234-94.2023.8.17.0013,Thiago Moreira,3ª Vara do Trabalho,Ataque,ativo
+1508567-36.2023.8.17.0014,Vanessa Ribeiro,7ª Vara Cível,Defesa,ativo
+1508890-73.2023.8.17.0014,Vanessa Ribeiro,7ª Vara Cível,Ataque,ativo
+1509123-14.2023.8.17.0015,Lucas Barros,1ª Vara de Família,Defesa,ativo
+1509456-88.2023.8.17.0015,Lucas Barros,1ª Vara de Família,Ataque,ativo
+1509789-20.2023.8.17.0016,Daniela Teixeira,2ª Vara de Família,Defesa,ativo
+1510012-65.2023.8.17.0016,Daniela Teixeira,2ª Vara de Família,Ataque,ativo
+1510345-09.2023.8.17.0017,Gabriel Azevedo,8ª Vara Cível,Defesa,ativo
+1510678-52.2023.8.17.0017,Gabriel Azevedo,8ª Vara Cível,Ataque,ativo
+1510987-97.2023.8.17.0018,Carla Menezes,4ª Vara do Trabalho,Defesa,ativo
+1511234-34.2023.8.17.0018,Carla Menezes,4ª Vara do Trabalho,Ataque,ativo
+1511567-71.2023.8.17.0019,Pedro Henrique,Juizado Especial Federal,Defesa,ativo
+1511890-16.2023.8.17.0019,Pedro Henrique,Juizado Especial Federal,Ataque,ativo
+1512123-58.2023.8.17.0020,Natália Guedes,9ª Vara Cível,Defesa,ativo
+1512456-01.2023.8.17.0020,Natália Guedes,9ª Vara Cível,Ataque,ativo
+1512789-46.2023.8.17.0021,Igor Freitas,3ª Vara Criminal,Defesa,ativo
+1513012-83.2023.8.17.0021,Igor Freitas,3ª Vara Criminal,Ataque,ativo
+1513345-25.2023.8.17.0022,Mariana Lopes,10ª Vara Cível,Defesa,ativo
+1513678-70.2023.8.17.0022,Mariana Lopes,10ª Vara Cível,Ataque,ativo
+1513987-11.2023.8.17.0023,Henrique Batista,5ª Vara do Trabalho,Defesa,ativo
+1514234-96.2023.8.17.0023,Henrique Batista,5ª Vara do Trabalho,Ataque,ativo
+1514567-39.2023.8.17.0024,Sabrina Monteiro,2ª Vara Cível,Defesa,ativo
+1514890-82.2023.8.17.0024,Sabrina Monteiro,2ª Vara Cível,Ataque,ativo

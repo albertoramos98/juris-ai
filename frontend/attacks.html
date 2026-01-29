@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Ataque & Defesa - Juris AI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div>
+        <strong>Juris AI</strong><br/>
+        <span>Ataque & Defesa</span>
+      </div>
+      <span style="width:10px;height:10px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 4px rgba(79,140,255,.18)"></span>
+    </div>
+
+    <nav class="nav">
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="documents.html">📁 Documentos</a>
+      <a href="process.html">📌 Processos</a>
+      <a class="active" href="attacks.html">⚔️ Ataque & Defesa</a>
+      <a href="import.html">⬆️ Import CSV</a>
+
+      <div class="hint">
+        Workspace textual por processo (estratégia + rascunho da peça).
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <header class="topbar">
+      <h1>Ataque & Defesa</h1>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="secondary" id="btnNew">Novo</button>
+        <button class="secondary" id="btnSave">Salvar (stub)</button>
+        <button onclick="logout()">Sair</button>
+      </div>
+    </header>
+
+    <section class="grid">
+
+      <!-- CONTEXTO -->
+      <div class="box">
+        <h2>Contexto</h2>
+
+        <div class="form-box">
+          <h3>Processo</h3>
+          <select id="processSelect">
+            <option value="">Carregando processos...</option>
+          </select>
+        </div>
+
+        <div class="form-box">
+          <h3>Estratégia</h3>
+          <input id="thesis" placeholder="Tese central (ex: nulidade, prescrição, etc)" />
+          <input id="goal" placeholder="Objetivo (ex: improcedência, acordo, liminar...)" />
+          <input id="risk" placeholder="Riscos (ex: prova fraca, prazo apertado...)" />
+        </div>
+
+        <div class="form-box">
+          <h3>Anexos úteis (auto + manual)</h3>
+
+          <textarea
+            id="refDocs"
+            rows="6"
+            placeholder="Documentos do processo (auto) + observações manuais"
+            style="width:100%; padding:12px; border-radius:12px;
+                   border:1px solid rgba(255,255,255,.10);
+                   background: rgba(255,255,255,.05);
+                   color: rgba(255,255,255,.92);
+                   outline:none;"></textarea>
+
+          <p class="muted" style="margin-top:8px;">
+            Ao selecionar o processo, os documentos vinculados aparecem aqui automaticamente.
+          </p>
+        </div>
+      </div>
+
+      <!-- PEÇA -->
+      <div class="box">
+        <h2>Peça (rascunho)</h2>
+
+        <div class="form-box">
+          <h3>Modelo</h3>
+          <select id="template">
+            <option value="contestacao">Contestação</option>
+            <option value="peticao_inicial">Petição inicial</option>
+            <option value="recurso">Recurso</option>
+            <option value="manifestacao">Manifestação</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+
+        <textarea
+          id="draft"
+          rows="18"
+          placeholder="Escreva aqui o rascunho da peça..."
+          style="width:100%; padding:12px; border-radius:12px;
+                 border:1px solid rgba(255,255,255,.10);
+                 background: rgba(255,255,255,.05);
+                 color: rgba(255,255,255,.92);
+                 outline:none;"></textarea>
+
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button class="secondary" id="btnCopy" style="flex:1;">Copiar</button>
+          <button id="btnExport" style="flex:1;">Exportar TXT</button>
+        </div>
+
+        <p class="muted" id="status" style="margin-top:10px;">Pronto.</p>
+      </div>
+
+    </section>
+
+    <script type="module" src="attacks.js"></script>
+  </main>
+</div>
+
+</body>
+</html>

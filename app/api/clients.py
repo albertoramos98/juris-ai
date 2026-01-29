@@ -15,14 +15,15 @@ router = APIRouter(prefix="/clients", tags=["clients"])
 @router.post("/", response_model=ClientResponse)
 def create_client(
     data: ClientCreate,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db),  
     user: User = Depends(ensure_office_not_blocked),
 ):
     client = Client(
-        name=data.name,
-        document=data.document,
-        office_id=user.office_id,
-    )
+    name=data.name,
+    document=data.document,
+    email=data.email,
+    office_id=user.office_id,
+)
     db.add(client)
     db.commit()
     db.refresh(client)

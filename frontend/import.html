@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Importação CSV - Juris AI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div>
+        <strong>Juris AI</strong><br/>
+        <span>Importação</span>
+      </div>
+      <span style="width:10px;height:10px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 4px rgba(79,140,255,.18)"></span>
+    </div>
+
+    <nav class="nav">
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="documents.html">📁 Documentos</a>
+      <a href="process.html">📌 Processos</a>
+      <a href="attacks.html">⚔️ Ataque & Defesa</a>
+      <a class="active" href="import.html">⬆️ Import CSV</a>
+
+      <div class="hint">
+        Importação em massa para demonstrar “produto pronto”.
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <header class="topbar">
+      <h1>Importação CSV (Processos)</h1>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="secondary" id="btnReset">Limpar</button>
+        <button class="secondary" id="btnRefresh">Recarregar</button>
+        <button id="btnLogout">Sair</button>
+      </div>
+    </header>
+
+    <section class="statusbar" style="margin-top:0;">
+      <div class="status-left">
+        <span class="dot dot-green" id="impDot"></span>
+        <strong id="impTitle">Import CSV</strong>
+        <span class="muted" id="impSub">Envie um CSV para pré-visualizar.</span>
+      </div>
+
+      <div class="status-right">
+        <span class="pill">Linhas: <b id="stRows">0</b></span>
+        <span class="pill">Válidas: <b id="stValid">0</b></span>
+        <span class="pill danger">Erros: <b id="stErr">0</b></span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="box">
+        <h2>1) Enviar CSV</h2>
+        <div style="margin-top:10px;">
+  <a
+    href="templates/processes_template.csv"
+    download
+    class="secondary"
+    style="display:inline-block;"
+  >
+    ⬇️ Baixar modelo CSV (processos) 
+  </a>
+</div>
+
+
+        <div class="form-box">
+          <h3>Arquivo</h3>
+          <input type="file" id="csvFile" accept=".csv" />
+          <p class="muted" style="margin-top:8px;">
+            Colunas obrigatórias: <b>number, client_name, court, type</b> (status é opcional)
+          </p>
+
+          <div style="display:flex; gap:10px; margin-top:10px;">
+            <button id="btnPreview" style="flex:1;">Pré-visualizar</button>
+            <button id="btnCommit" class="secondary" style="flex:1;" disabled>Importar</button>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap;">
+            <label class="muted" style="display:flex; gap:8px; align-items:center;">
+              <input type="radio" name="mode" value="create_only" checked />
+              create_only
+            </label>
+            <label class="muted" style="display:flex; gap:8px; align-items:center;">
+              <input type="radio" name="mode" value="upsert" />
+              upsert
+            </label>
+            <span class="muted" id="modeHint">create_only: se já existir, vira erro.</span>
+          </div>
+        </div>
+
+        <div class="form-box">
+          <h3>Relatório</h3>
+          <div id="reportBox">
+            <p class="muted">Sem relatório ainda.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box">
+        <h2>2) Preview</h2>
+
+        <div id="previewBox">
+          <p class="muted">Faça o preview para ver as linhas e erros.</p>
+        </div>
+
+        <div style="margin-top:12px;">
+          <h3>Erros</h3>
+          <div id="errorsBox">
+            <p class="muted">Nenhum erro exibido.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script type="module" src="import.js"></script>
+  </main>
+</div>
+
+</body>
+</html>

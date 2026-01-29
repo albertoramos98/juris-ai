@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Documentos - Juris AI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div>
+        <strong>Juris AI</strong><br/>
+        <span>Documentos</span>
+      </div>
+      <span style="width:10px;height:10px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 4px rgba(79,140,255,.18)"></span>
+    </div>
+
+    <nav class="nav">
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a class="active" href="documents.html">📁 Documentos</a>
+      <a href="process.html">📌 Processos</a>
+      <a href="attacks.html">⚔️ Ataque & Defesa</a>
+
+      <div class="hint">
+        Docs agora saíram do dashboard. Aqui é o módulo certo.
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <header class="topbar">
+      <h1>Documentos</h1>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="secondary" id="btnRefresh">Recarregar</button>
+        <button id="btnLogout">Sair</button>
+      </div>
+    </header>
+
+    <section class="statusbar" style="margin-top:0;">
+      <div class="status-left">
+        <span class="dot dot-green" id="docsDot"></span>
+        <strong id="docsTitle">Docs por processo</strong>
+        <span class="muted" id="docsSub">Selecione um processo.</span>
+      </div>
+
+      <div class="status-right">
+        <span class="pill">Processo: <b id="stProcess">—</b></span>
+        <span class="pill">Total: <b id="stTotal">0</b></span>
+        <span class="pill danger">Erro: <b id="stErr">0</b></span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="box">
+        <h2>Selecionar processo</h2>
+
+        <div class="form-box">
+          <h3>Processo</h3>
+          <select id="processSelect">
+            <option value="">Carregando processos...</option>
+          </select>
+          <div class="muted" style="margin-top:8px;" id="processMeta"></div>
+        </div>
+
+        <div class="form-box">
+          <h3>Upload de documento</h3>
+
+          <div class="row" style="display:flex; gap:10px; flex-wrap:wrap;">
+            <select id="docCategory" style="min-width:220px;">
+              <option value="inicial">Inicial</option>
+              <option value="procuracao">Procuração</option>
+              <option value="contrato">Contrato</option>
+              <option value="docs_cliente">Docs do Cliente</option>
+              <option value="outros">Outros</option>
+            </select>
+            <input type="file" id="docFile" style="flex:1; min-width:220px;" />
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:10px;">
+            <button id="btnUpload" style="flex:1;" disabled>Upload</button>
+            <button id="btnLoad" class="secondary" style="flex:1;" disabled>Listar docs</button>
+          </div>
+
+          <p class="muted" id="uploadHint" style="margin:10px 0 0;">Escolha um processo primeiro.</p>
+        </div>
+      </div>
+
+      <div class="box">
+        <h2>Lista</h2>
+
+        <div class="row" style="display:flex; gap:10px; flex-wrap:wrap;">
+          <input id="searchInput" placeholder="Buscar por nome/categoria..." style="flex:1; min-width:240px;" />
+          <select id="filterCategory" style="min-width:200px;">
+            <option value="">Todas categorias</option>
+            <option value="inicial">Inicial</option>
+            <option value="procuracao">Procuração</option>
+            <option value="contrato">Contrato</option>
+            <option value="docs_cliente">Docs do Cliente</option>
+            <option value="outros">Outros</option>
+          </select>
+        </div>
+
+        <div id="docsList" style="margin-top:12px;">
+          <p class="muted">Selecione um processo para exibir documentos.</p>
+        </div>
+      </div>
+    </section>
+
+    <script type="module" src="documents.js"></script>
+  </main>
+</div>
+
+</body>
+</html>

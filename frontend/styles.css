@@ -7,12 +7,14 @@
   --card: #111c33;        /* custom */
   --muted: rgba(255,255,255,.08);
   --muted-2: rgba(255,255,255,.12);
+
   --text: rgba(255,255,255,.92);
   --text-dim: rgba(255,255,255,.70);
   --text-faint: rgba(255,255,255,.52);
 
   --primary: #4f8cff;
   --primary-2: #2f6bff;
+
   --danger: #ff4d4f;
   --warn: #ffb020;
   --ok: #22c55e;
@@ -27,7 +29,7 @@
 }
 
 /* =====================
-   RESET
+   RESET / BASE
 ===================== */
 *{ box-sizing:border-box; }
 html, body{ height:100%; }
@@ -43,12 +45,14 @@ body{
   color: var(--text);
 }
 
-/* =====================
-   LAYOUT HELPERS
-===================== */
-a{ color:inherit; text-decoration:none; }
+a{ color: inherit; }
+a:hover{ color: rgba(255,255,255,.95); }
+
 ul{ margin:0; padding:0; list-style:none; }
 button, input, select{ font:inherit; }
+
+.muted{ color: var(--text-dim); font-size: 13px; }
+.row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 
 /* =====================
    TOPBAR
@@ -98,9 +102,7 @@ button:hover{
   filter: brightness(1.05);
   box-shadow: 0 14px 28px rgba(47,107,255,.26);
 }
-button:active{
-  transform: translateY(1px);
-}
+button:active{ transform: translateY(1px); }
 button:disabled{
   opacity:.55;
   cursor:not-allowed;
@@ -111,9 +113,16 @@ button.secondary{
   background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
   box-shadow:none;
 }
+
 button.danger{
   background: linear-gradient(180deg, rgba(255,77,79,.95), rgba(220,38,38,.95));
   box-shadow: 0 10px 22px rgba(255,77,79,.20);
+}
+
+.btn-small{
+  padding:8px 10px;
+  border-radius:10px;
+  font-size:13px;
 }
 
 /* =====================
@@ -140,6 +149,59 @@ input:focus, select:focus{
 select option{
   background:#0f172a;
   color: white;
+}
+
+/* =====================
+   STATUS BAR (dark consistent)
+===================== */
+.statusbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  padding:14px 16px;
+  border-radius:14px;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: var(--shadow-soft);
+  margin: 10px 0 18px;
+}
+
+.status-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  display:inline-block;
+}
+.dot-green{ background: var(--ok); }
+.dot-red{ background: var(--danger); }
+
+.status-right{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.pill{
+  background: rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.10);
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:13px;
+  color: var(--text-dim);
+}
+.pill b{ color: rgba(255,255,255,.92); }
+.pill.danger{
+  background: rgba(255,77,79,0.10);
+  border-color: rgba(255,77,79,0.22);
 }
 
 /* =====================
@@ -188,6 +250,16 @@ select option{
   filter: blur(0.2px);
 }
 
+/* quando bloqueado, mantém dark (não vira branco) */
+.card-blocked{
+  border: 1px solid rgba(255,77,79,.35);
+  background:
+    radial-gradient(700px 350px at 0% 0%, rgba(255,77,79,.12), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+}
+.card-blocked h3{ color: rgba(255,77,79,.92); }
+.card-blocked span{ color: rgba(255,255,255,.96); }
+
 /* =====================
    GRID / BOXES
 ===================== */
@@ -231,20 +303,13 @@ select option{
 }
 
 .form-box input,
-.form-box select{
-  margin-bottom: 10px;
-}
-
-.form-box button{
-  width:100%;
-}
+.form-box select{ margin-bottom: 10px; }
+.form-box button{ width:100%; }
 
 /* =====================
-   CHECKBOX (bonito)
+   CHECKBOX
 ===================== */
-label{
-  color: var(--text-dim);
-}
+label{ color: var(--text-dim); }
 
 label input[type="checkbox"]{
   width: 18px;
@@ -262,16 +327,8 @@ label.checkbox{
   background: rgba(255,255,255,.05);
 }
 
-/* Se você usar o label como no HTML que te passei, ele já fica ok */
-label[style*="display:flex"]{
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.05);
-  padding: 10px 12px;
-  border-radius: 12px;
-}
-
 /* =====================
-   LIST ITEMS (cards)
+   LIST ITEMS (default)
 ===================== */
 ul li{
   padding: 10px 12px;
@@ -282,8 +339,45 @@ ul li{
   color: var(--text);
   box-shadow: 0 8px 18px rgba(0,0,0,.18);
 }
-
 ul li:last-child{ margin-bottom: 0; }
+
+/* =====================
+   DEADLINES LIST ITEMS (layout)
+===================== */
+.deadline-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:12px 12px;
+  border-radius:12px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  margin-bottom:10px;
+}
+
+.deadline-left{ display:flex; flex-direction:column; gap:4px; }
+.deadline-title{ display:flex; align-items:center; gap:10px; }
+.deadline-meta{ font-size:13px; color: var(--text-dim); }
+
+.badge{
+  font-size:12px;
+  font-weight:700;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid transparent;
+  letter-spacing:.2px;
+}
+.badge-danger{
+  color: rgba(255,255,255,.92);
+  background: rgba(255,77,79,0.14);
+  border-color: rgba(255,77,79,0.25);
+}
+.badge-muted{
+  color: rgba(255,255,255,.82);
+  background: rgba(148,163,184,0.12);
+  border-color: rgba(148,163,184,0.22);
+}
 
 /* =====================
    DEADLINES VISUAL STATES
@@ -366,4 +460,137 @@ ul li:last-child{ margin-bottom: 0; }
   .cards{ grid-template-columns: 1fr; }
   body{ padding: 16px; }
   .grid{ grid-template-columns: 1fr; }
+}
+
+/* =====================
+   APP SHELL (SIDEBAR)
+===================== */
+.app-shell{
+  display:grid;
+  grid-template-columns: 260px 1fr;
+  gap:16px;
+  align-items:start;
+}
+
+.sidebar{
+  position: sticky;
+  top: 16px;
+  align-self:start;
+
+  border-radius: var(--radius);
+  border: 1px solid var(--muted);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  box-shadow: var(--shadow-soft);
+  padding: 14px;
+  min-height: calc(100vh - 32px);
+}
+
+.sidebar .brand{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding: 10px 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  margin-bottom: 12px;
+}
+
+.sidebar .brand strong{
+  font-size: 14px;
+  letter-spacing:.3px;
+}
+.sidebar .brand span{
+  font-size: 12px;
+  opacity:.7;
+}
+
+.nav{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top: 10px;
+}
+
+.nav a{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.88);
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+}
+
+.nav a:hover{
+  background: rgba(255,255,255,.05);
+  border-color: rgba(79,140,255,.25);
+}
+
+.nav a.active{
+  border-color: rgba(79,140,255,.45);
+  background: rgba(79,140,255,.12);
+  box-shadow: 0 0 0 4px rgba(79,140,255,.12);
+}
+
+.nav .hint{
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255,255,255,.14);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.7);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.main{
+  min-width: 0;
+}
+
+/* =====================
+   FIX: DARK CONSISTENCY
+   (Você tinha umas partes claras no fim do CSS)
+===================== */
+.statusbar{
+  background: rgba(255,255,255,.04) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+.pill{
+  background: rgba(255,255,255,.04) !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
+}
+
+.deadline-item{
+  background: rgba(255,255,255,.04) !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
+}
+
+.badge-muted{
+  color: rgba(255,255,255,.82) !important;
+  background: rgba(148,163,184,.14) !important;
+  border-color: rgba(148,163,184,.22) !important;
+}
+
+/* bloqueio dos cards em dark (antes tava branco/vermelho claro) */
+.card-blocked{
+  border: 2px solid rgba(255,77,79,.55) !important;
+  background:
+    radial-gradient(700px 350px at 0% 0%, rgba(255,77,79,.18), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)) !important;
+}
+.card-blocked h3{ color: rgba(255,255,255,.80) !important; }
+.card-blocked span{ color: white !important; }
+
+/* =====================
+   RESPONSIVE
+===================== */
+@media (max-width: 980px){
+  .app-shell{ grid-template-columns: 1fr; }
+  .sidebar{ position: relative; min-height:auto; }
 }

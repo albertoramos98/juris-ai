@@ -6,5 +6,6 @@ class Client(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+    email = Column(String, nullable=True)     # EMAIL 👈
     document = Column(String, nullable=True)  # CPF/CNPJ
     office_id = Column(Integer, ForeignKey("offices.id"), nullable=False)

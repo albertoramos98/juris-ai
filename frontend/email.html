@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>E-mails - Juris AI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div>
+        <strong>Juris AI</strong><br/>
+        <span>E-mails</span>
+      </div>
+      <span style="width:10px;height:10px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 4px rgba(79,140,255,.18)"></span>
+    </div>
+
+    <nav class="nav">
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="documents.html">📁 Documentos</a>
+      <a href="process.html">📌 Processos</a>
+      <a href="attacks.html">⚔️ Ataque & Defesa</a>
+      <a href="import.html">⬆️ Import CSV</a>
+      <a class="active" href="email.html">✉️ E-mails</a>
+
+      <div class="hint">
+        Envio manual + histórico por processo (demo).
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <header class="topbar">
+      <h1>E-mails</h1>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="secondary" id="btnRefresh">Recarregar</button>
+        <button onclick="logout()">Sair</button>
+      </div>
+    </header>
+
+    <section class="statusbar" style="margin-top:0;">
+      <div class="status-left">
+        <span class="dot dot-green" id="mailDot"></span>
+        <strong id="mailTitle">Envio de e-mail</strong>
+        <span class="muted" id="mailSub">Selecione um processo.</span>
+      </div>
+
+      <div class="status-right">
+        <span class="pill">Processo: <b id="stProcess">—</b></span>
+        <span class="pill">Logs: <b id="stLogs">0</b></span>
+        <span class="pill danger">Erros: <b id="stErr">0</b></span>
+      </div>
+    </section>
+
+    <section class="grid">
+
+      <!-- COMPOSER -->
+      <div class="box">
+        <h2>Compor</h2>
+
+        <div class="form-box">
+          <h3>Processo</h3>
+          <select id="processSelect">
+            <option value="">Carregando processos...</option>
+          </select>
+          <div class="muted" style="margin-top:8px;" id="processMeta"></div>
+        </div>
+
+        <div class="form-box">
+          <h3>Assunto</h3>
+          <input id="subject" placeholder="Ex: Solicitação de documentos" />
+        </div>
+
+        <div class="form-box">
+          <h3>Mensagem</h3>
+          <textarea id="body" rows="10"
+            style="width:100%; padding:12px; border-radius:12px;
+                   border:1px solid rgba(255,255,255,.10);
+                   background: rgba(255,255,255,.05);
+                   color: rgba(255,255,255,.92);
+                   outline:none;"
+            placeholder="Escreva o e-mail aqui..."></textarea>
+
+          <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="secondary" id="btnTemplate" style="flex:1;">Template cobrança</button>
+            <button id="btnSend" style="flex:1;" disabled>Enviar</button>
+          </div>
+
+          <p class="muted" style="margin-top:10px;">
+            Obs: o e-mail é enviado para o <b>client.email</b> do processo.
+          </p>
+        </div>
+      </div>
+
+      <!-- LOGS -->
+      <div class="box">
+        <h2>Histórico (por processo)</h2>
+
+        <div class="row" style="display:flex; gap:10px; flex-wrap:wrap;">
+          <input id="searchInput" placeholder="Buscar por assunto / status..." style="flex:1; min-width:240px;" />
+          <select id="filterStatus" style="min-width:200px;">
+            <option value="">Todos</option>
+            <option value="sent">Enviados</option>
+            <option value="failed">Falhas</option>
+          </select>
+        </div>
+
+        <div id="logsList" style="margin-top:12px;">
+          <p class="muted">Selecione um processo para ver logs.</p>
+        </div>
+      </div>
+
+    </section>
+
+    <script type="module" src="email.js"></script>
+  </main>
+</div>
+
+</body>
+</html>

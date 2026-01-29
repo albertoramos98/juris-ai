@@ -10,18 +10,14 @@ class Deadline(Base):
     description = Column(String, nullable=False)
     due_date = Column(Date, nullable=False)
 
-    # hoje isso é string, ok por enquanto (mas não dá pra bloquear "por advogado" de verdade)
-    responsible = Column(String, nullable=False)  # cliente | advogado
+    responsible = Column(String, nullable=False)
 
-    # Controle do prazo
     completed = Column(Boolean, default=False, nullable=False)
     completed_at = Column(DateTime, nullable=True)
     completed_by = Column(Integer, nullable=True)
 
-    # Governança (novo)
     is_critical = Column(Boolean, default=False, nullable=False)
-    status = Column(String, default="pending", nullable=False)  # pending | done
+    status = Column(String, default="pending", nullable=False)
 
-    # Relacionamentos
     process_id = Column(Integer, ForeignKey("processes.id"), nullable=False)
     office_id = Column(Integer, ForeignKey("offices.id"), nullable=False)

@@ -2,121 +2,186 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Dashboard - Juris AI</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<header class="topbar">
-  <h1>Dashboard</h1>
-  <button onclick="logout()">Sair</button>
-</header>
+<div class="app-shell">
 
-<section class="cards">
-  <div class="card">
-    <h3>Clientes</h3>
-    <span id="clients-count">0</span>
-  </div>
-  <div class="card">
-    <h3>Processos</h3>
-    <span id="processes-count">0</span>
-  </div>
-  <div class="card">
-    <h3>Prazos</h3>
-    <span id="deadlines-count">0</span>
-  </div>
-</section>
-
-<section class="grid">
-
-  <!-- CLIENTES -->
-  <div class="box">
-    <h2>Clientes</h2>
-
-    <div class="form-box">
-      <h3>Novo Cliente</h3>
-      <input id="client-name" placeholder="Nome do cliente" />
-      <input id="client-doc" placeholder="CPF/CNPJ" />
-      <button onclick="createClient()">Criar Cliente</button>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div>
+        <strong>Juris AI</strong><br/>
+        <span>Legal Ops • MVP</span>
+      </div>
+      <span style="width:10px;height:10px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 4px rgba(79,140,255,.18)"></span>
     </div>
 
-    <ul id="clients-list"></ul>
-  </div>
+    <nav class="nav">
+      <a class="active" href="dashboard.html">🏠 Dashboard</a>
+      <a href="documents.html">📁 Documentos</a>
+      <a href="process.html">📌 Processos</a>
+      <a href="attacks.html">⚔️ Ataque & Defesa</a>
+      <a href="import.html">⬆️ Import CSV</a>
+      <a href="email.html">✉️ E-mails</a>
 
-  <!-- PROCESSOS -->
-  <div class="box">
-    <h2>Processos</h2>
+      <div class="hint">
+        Dica: mantém cada módulo em uma página e deixa o <b>app.js</b> só pro dashboard.
+      </div>
+    </nav>
+  </aside>
 
-    <div class="form-box">
-      <h3>Novo Processo</h3>
-      <input id="process-number" placeholder="Número do processo" />
-      <input id="process-court" placeholder="Vara" />
-      <input id="process-type" placeholder="Tipo de ação" />
+  <!-- MAIN -->
+  <main class="main">
 
-      <select id="process-client-select">
-        <option value="">Selecione o cliente</option>
-      </select>
+    <header class="topbar">
+      <h1>Dashboard</h1>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="secondary" onclick="connectGoogleDrive()">Conectar Google Drive</button>
+        <button onclick="logout()">Sair</button>
+      </div>
+    </header>
 
-      <button onclick="createProcess()">Criar Processo</button>
+    <section id="office-status" class="statusbar">
+      <div class="status-left">
+        <span id="status-dot" class="dot"></span>
+        <strong id="status-title">Carregando status...</strong>
+        <span id="status-sub" class="muted"></span>
+      </div>
+
+      <div class="status-right">
+        <span class="pill">Abertos: <b id="st-open-total">0</b></span>
+        <span class="pill">Críticos abertos: <b id="st-open-critical">0</b></span>
+        <span class="pill">Vencidos: <b id="st-overdue-total">0</b></span>
+        <span class="pill danger">Críticos vencidos: <b id="st-overdue-critical">0</b></span>
+      </div>
+    </section>
+
+    <section class="cards">
+      <div class="card">
+        <h3>Clientes</h3>
+        <span id="clients-count">0</span>
+      </div>
+      <div class="card">
+        <h3>Processos</h3>
+        <span id="processes-count">0</span>
+      </div>
+      <div class="card">
+        <h3>Prazos</h3>
+        <span id="deadlines-count">0</span>
+      </div>
+    </section>
+
+    <section class="grid">
+
+      <div class="box">
+        <h2>Clientes</h2>
+        <div class="form-box">
+          <h3>Novo Cliente</h3>
+          <input id="client-name" placeholder="Nome do cliente" />
+          <input id="client-doc" placeholder="CPF/CNPJ" />
+          <input id="client-email" placeholder="E-mail (ex: cliente@dominio.com)" />
+          <button onclick="createClient()">Criar Cliente</button>
+        </div>
+        <ul id="clients-list"></ul>
+      </div>
+
+      <div class="box">
+        <h2>Processos</h2>
+        <div class="form-box">
+          <h3>Novo Processo</h3>
+          <input id="process-number" placeholder="Número do processo" />
+          <input id="process-court" placeholder="Vara" />
+          <input id="process-type" placeholder="Tipo de ação" />
+
+          <select id="process-client-select">
+            <option value="">Selecione o cliente</option>
+          </select>
+
+          <button onclick="createProcess()">Criar Processo</button>
+        </div>
+        <ul id="processes-list"></ul>
+      </div>
+
+      <div class="box">
+        <h2>Prazos</h2>
+        <div class="form-box">
+          <h3>Novo Prazo</h3>
+          <input id="deadline-desc" placeholder="Descrição" />
+          <input id="deadline-date" type="date" />
+          <input id="deadline-resp" placeholder="Responsável" />
+
+          <label class="checkbox">
+            <input id="deadline-critical" type="checkbox" />
+            Prazo crítico
+          </label>
+
+          <select id="deadline-process-select">
+            <option value="">Selecione o processo</option>
+          </select>
+
+          <button onclick="createDeadline()">Criar Prazo</button>
+        </div>
+
+        <ul id="deadlines-list"></ul>
+      </div>
+
+    </section>
+
+    <!-- OVERLAY DE BLOQUEIO -->
+    <div id="lock-overlay" style="display:none;">
+      <div class="lock-box">
+        <h2>⛔ ESCRITÓRIO BLOQUEADO</h2>
+
+        <p id="lock-message" style="margin-top: 8px;">
+          Existe prazo crítico vencido não concluído.
+        </p>
+
+        <div style="margin-top: 12px;">
+          <h3 style="margin: 0 0 8px 0;">Críticos vencidos</h3>
+          <ul id="lock-deadlines" style="margin:0; padding-left: 18px;"></ul>
+        </div>
+
+        <hr style="margin: 16px 0; opacity: 0.2;" />
+
+        <div>
+          <h3 style="margin: 0 0 8px 0;">Desbloquear (Owner)</h3>
+
+          <input id="unlock-password" type="password" placeholder="Senha de desbloqueio"
+                 style="width:100%; margin-bottom: 8px;" />
+
+          <input id="unlock-reason" placeholder="Motivo (opcional)"
+                 style="width:100%; margin-bottom: 8px;" />
+
+          <input id="unlock-minutes" type="number" min="5" max="720" value="30"
+                 placeholder="Minutos (padrão 30)"
+                 style="width:100%; margin-bottom: 8px;" />
+
+          <button onclick="unlockOffice()" style="width:100%;">🔓 Desbloquear por override</button>
+
+          <p id="unlock-error" style="margin: 10px 0 0; color: #ff8a8a; display:none;"></p>
+
+          <p style="opacity:0.8; margin-top: 12px; font-size: 14px;">
+            *Se você não for owner, vai dar 403. O desbloqueio dura alguns minutos.
+          </p>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top: 16px;">
+          <button onclick="location.reload()" class="secondary">Recarregar</button>
+          <button onclick="logout()" class="danger">Sair</button>
+        </div>
+
+        <p style="opacity:0.8; margin-top: 12px; font-size: 14px;">
+          Para destravar definitivo: conclua o(s) prazo(s) crítico(s) vencido(s).
+        </p>
+      </div>
     </div>
 
-    <ul id="processes-list"></ul>
-  </div>
-
-  <!-- PRAZOS -->
-  <div class="box">
-    <h2>Prazos</h2>
-
-    <div class="form-box">
-      <h3>Novo Prazo</h3>
-      <input id="deadline-desc" placeholder="Descrição" />
-      <input id="deadline-date" type="date" />
-      <input id="deadline-resp" placeholder="Responsável" />
-
-      <label class="checkbox">
-  <input id="deadline-critical" type="checkbox" />
-  Prazo crítico
-</label>
-
-
-      <select id="deadline-process-select">
-        <option value="">Selecione o processo</option>
-      </select>
-
-      <button onclick="createDeadline()">Criar Prazo</button>
-    </div>
-
-    <ul id="deadlines-list"></ul>
-  </div>
-
-</section>
-
-<script type="module" src="app.js"></script>
-
-<!-- OVERLAY DE BLOQUEIO (LETRA A) -->
-<div id="lock-overlay" style="display:none;">
-  <div class="lock-box">
-    <h2>⛔ ESCRITÓRIO BLOQUEADO</h2>
-
-    <!-- o JS escreve aqui quando vier /system/status ou 423 -->
-    <p id="lock-message" style="margin-top: 8px;">
-      Existe prazo crítico vencido não concluído.
-    </p>
-
-    <div style="margin-top: 12px;">
-      <h3 style="margin: 0 0 8px 0;">Críticos vencidos</h3>
-      <ul id="lock-deadlines" style="margin:0; padding-left: 18px;"></ul>
-    </div>
-
-    <div style="display:flex; gap:10px; margin-top: 16px;">
-      <button onclick="location.reload()">Recarregar</button>
-      <button onclick="logout()">Sair</button>
-    </div>
-
-    <p style="opacity:0.8; margin-top: 12px; font-size: 14px;">
-      Para destravar: conclua o(s) prazo(s) crítico(s) vencido(s).
-    </p>
-  </div>
+    <script type="module" src="app.js"></script>
+  </main>
 </div>
 
 </body>

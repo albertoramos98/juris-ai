@@ -9,6 +9,6 @@ class Process(Base):
     court = Column(String, nullable=False)  # Vara
     type = Column(String, nullable=False)   # Tipo de ação
     status = Column(String, default="ativo")
-
+    drive_folder_id = Column(String, nullable=True, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
     office_id = Column(Integer, ForeignKey("offices.id"), nullable=False)
