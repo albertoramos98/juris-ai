@@ -34,20 +34,34 @@ def create_deadline(
     user: User = Depends(get_current_user),
 ):
     description = (data.get("description") or "").strip()
-    due_date = data.get("due_date")
+    due_date_raw = data.get("due_date")
     responsible = (data.get("responsible") or "").strip()
     process_id = data.get("process_id")
     is_critical = bool(data.get("is_critical"))
 
-    if not description or not due_date or not responsible or not process_id:
+    if not description or not due_date_raw or not responsible or not process_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Missing required fields.",
         )
 
+    # ✅ converte string -> date pro SQLite
+    try:
+        if isinstance(due_date_raw, date):
+            due_date = due_date_raw
+        elif isinstance(due_date_raw, str):
+            due_date = date.fromisoformat(due_date_raw)  # "YYYY-MM-DD"
+        else:
+            raise ValueError("Invalid due_date type")
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="due_date must be in YYYY-MM-DD format.",
+        )
+
     deadline = Deadline(
         description=description,
-        due_date=due_date,
+        due_date=due_date,  # ✅ agora é date
         responsible=responsible,
         process_id=process_id,
         is_critical=is_critical,
@@ -61,6 +75,7 @@ def create_deadline(
     db.refresh(deadline)
 
     return deadline
+
 
 
 @router.post("/{deadline_id}/complete")

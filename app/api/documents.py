@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from annotated_types import doc
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+from app.services.email_flow_service import stop_email_flows_on_document_upload
 
 from app.core.database import get_db
 from app.auth.dependencies import get_current_user
@@ -121,10 +123,28 @@ async def upload_document(
         mime_type=uploaded.get("mimeType") or mime_type,
         drive_file_id=uploaded["id"],
         drive_web_view_link=uploaded.get("webViewLink"),
+
+
+
     )
 
     db.add(doc)
     db.commit()
     db.refresh(doc)
 
+    # 5) STOP automático do flow de cobrança (se existir)
+    stopped = stop_email_flows_on_document_upload(
+        db=db,
+        office_id=user.office_id,
+        process_id=process_id,
+        reason=f"Documento recebido: {doc.category}",
+    )
+
+    if stopped:
+        print(f"[EMAIL_FLOW] stopped={stopped} office={user.office_id} process={process_id}")
+
     return doc
+
+
+
+

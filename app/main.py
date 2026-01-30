@@ -25,6 +25,7 @@ from app.auth.google import router as google_router
 from app.api.documents import router as documents_router
 from app.api.imports import router as imports_router
 from app.api.emails import router as emails_router
+from app.api.email_flows import router as email_flows_router
 
 
 
@@ -57,6 +58,7 @@ app.include_router(google_calendar_router)
 app.include_router(documents_router)
 app.include_router(imports_router)
 app.include_router(emails_router)
+app.include_router(email_flows_router)
 
 
 @app.get("/")

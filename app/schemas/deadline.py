@@ -4,10 +4,10 @@ from typing import Optional
 
 class DeadlineCreate(BaseModel):
     description: str
-    due_date: date
+    due_date: date          # <--- aqui
     responsible: str
-    process_id: int
     is_critical: bool = False
+    process_id: int
 
 
 class DeadlineResponse(BaseModel):
