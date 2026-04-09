@@ -4,9 +4,14 @@ import os
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
 
-# Ajuste para Render/Railway que às vezes usam 'postgres://' mas o SQLAlchemy quer 'postgresql://'
+# Ajuste para Supabase/Render/Railway
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Adiciona sslmode=require se for PostgreSQL e não tiver parâmetros
+if "postgresql" in DATABASE_URL and "sslmode" not in DATABASE_URL:
+    separator = "&" if "?" in DATABASE_URL else "?"
+    DATABASE_URL += f"{separator}sslmode=require"
 
 connect_args = {}
 if "sqlite" in DATABASE_URL:
