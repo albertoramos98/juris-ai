@@ -1,33 +1,22 @@
 from datetime import datetime, timedelta
 from jose import jwt
-from passlib.context import CryptContext
 import bcrypt
 
 from app.core.settings import settings
 from app.models.user import User
 
-# Adicionado bcrypt para suporte total aos hashes do banco
-pwd_context = CryptContext(
-    schemes=["bcrypt", "pbkdf2_sha256"],
-    deprecated="auto"
-)
-
-
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
+    # Gera o hash de forma limpa, compatível com as versões mais novas do bcrypt
+    salt = bcrypt.gensalt()
+    hashed_bytes = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed_bytes.decode('utf-8')
 
 def verify_password(plain: str, hashed: str) -> bool:
     try:
-        # Tenta via passlib (que gerencia múltiplos esquemas)
-        return pwd_context.verify(plain, hashed)
+        # Verifica se as senhas batem
+        return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
     except Exception:
-        # Fallback manual para bcrypt caso o passlib falhe por erro de versão/formato
-        try:
-            return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
-        except:
-            return False
-
+        return False
 
 def authenticate_user(db, email: str, password: str):
     user = db.query(User).filter(User.email == email).first()
@@ -36,7 +25,6 @@ def authenticate_user(db, email: str, password: str):
     if not verify_password(password, user.password):
         return None
     return user
-
 
 def create_access_token(data: dict):
     to_encode = data.copy()
