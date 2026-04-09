@@ -13,6 +13,11 @@ if "postgresql" in DATABASE_URL and "sslmode" not in DATABASE_URL:
     separator = "&" if "?" in DATABASE_URL else "?"
     DATABASE_URL += f"{separator}sslmode=require"
 
+# REMOVE pgbouncer=true pois o psycopg2 (Python) não aceita esse parâmetro no DSN
+if "pgbouncer=true" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("pgbouncer=true", "")
+    DATABASE_URL = DATABASE_URL.replace("&&", "&").replace("?&", "?").rstrip("?").rstrip("&")
+
 connect_args = {}
 if "sqlite" in DATABASE_URL:
     connect_args["check_same_thread"] = False
