@@ -1,4 +1,3 @@
-# Importa todos os models para registrar no SQLAlchemy
 from app.models.office import Office  # noqa: F401
 from app.models.user import User  # noqa: F401
 from app.models.client import Client  # noqa: F401
@@ -7,5 +6,10 @@ from app.models.deadline import Deadline  # noqa: F401
 from app.models.user_block import UserBlock  # noqa: F401
 from app.models.office_override import OfficeOverride  # noqa: F401
 from app.models.google_token import GoogleToken  # noqa: F401
-from .document import Document
-
+from app.models.document import Document  # noqa: F401
+from app.models.email_flow import EmailFlow  # noqa: F401
+from app.models.global_knowledge import GlobalKnowledge  # noqa: F401
+from app.models.document_chunk import DocumentChunk  # noqa: F401
+from app.models.chunk_embedding import ChunkEmbedding  # noqa: F401
+from app.models.process_event import ProcessEvent  # noqa: F401
+from app.models.email_log import EmailLog  # noqa: F401

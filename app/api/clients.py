@@ -18,12 +18,31 @@ def create_client(
     db: Session = Depends(get_db),  
     user: User = Depends(ensure_office_not_blocked),
 ):
+    # 1) verifica se o nome do cliente já existe para aquele escritório
+    existing_client = (
+        db.query(Client)
+        .filter(
+            Client.name == data.name,
+            Client.office_id == user.office_id,
+        )
+        .first()
+    )
+
+    if existing_client:
+        # Se preferir não barrar por nome, pode retornar o existente ou ignorar,
+        # mas aqui vou barrar pra evitar confusão.
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cliente com o nome '{data.name}' já cadastrado para este escritório",
+        )
+
     client = Client(
-    name=data.name,
-    document=data.document,
-    email=data.email,
-    office_id=user.office_id,
-)
+        name=data.name,
+        document=data.document,
+        email=data.email,
+        office_id=user.office_id,
+    )
     db.add(client)
     db.commit()
     db.refresh(client)

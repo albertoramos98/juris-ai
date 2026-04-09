@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Cérebro Juris IA</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 160px);
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--card-border);
+      overflow: hidden;
+    }
+    #chatBox {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .chat-msg {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    .chat-msg.user {
+      align-self: flex-end;
+      background: var(--primary);
+      color: white;
+      border-bottom-right-radius: 2px;
+    }
+    .chat-msg.assistant {
+      align-self: flex-start;
+      background: rgba(255,255,255,0.05);
+      color: var(--text-main);
+      border-bottom-left-radius: 2px;
+      border: 1px solid var(--card-border);
+    }
+    .chat-input-area {
+      padding: 20px;
+      background: rgba(0,0,0,0.2);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      gap: 12px;
+    }
+    .source-sidebar {
+      width: 300px;
+      background: var(--sidebar-bg);
+      border-left: 1px solid var(--card-border);
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .source-item {
+      padding: 10px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      border: 1px solid transparent;
+    }
+    .source-item:hover { border-color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon"><i class="fas fa-balance-scale"></i></div>
+        <h2>Juris AI</h2>
+      </div>
+      <nav class="nav">
+        <a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a>
+        <a href="process.html"><i class="fas fa-gavel"></i> <span>Processos</span></a>
+        <a href="documents.html"><i class="fas fa-folder-open"></i> <span>Documentos</span></a>
+        <a href="styles.html"><i class="fas fa-pen-nib"></i> <span>Treinar Estilo</span></a>
+        <a href="knowledge.html"><i class="fas fa-book"></i> <span>Biblioteca Jurídica</span></a>
+        <a href="attacks.html"><i class="fas fa-shield-halved"></i> <span>Ataque & Defesa</span></a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 id="processTitle">Carregando processo...</h1>
+          <p style="color: var(--text-secondary);">Assistente Inteligente baseado em RAG (Fatos + Direito).</p>
+        </div>
+        <button class="secondary" onclick="location.href='process.html'"><i class="fas fa-arrow-left"></i> Voltar</button>
+      </header>
+
+      <div style="display: flex; gap: 24px;">
+        <div style="flex: 1;">
+          <div class="chat-container">
+            <div id="chatBox">
+              <div class="chat-msg assistant">
+                Olá! Eu sou o assistente do Juris IA. Posso analisar os documentos deste processo e sua biblioteca jurídica para tirar dúvidas ou sugerir teses. Como posso ajudar?
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <input type="text" id="chatInput" placeholder="Pergunte algo sobre o processo..." style="flex: 1;" />
+              <button id="btnSend" class="primary"><i class="fas fa-paper-plane"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <aside class="source-sidebar">
+          <h3 style="font-size: 14px; margin-bottom: 16px; color: var(--text-secondary);">FONTES DA RESPOSTA</h3>
+          <div id="sourceList">
+            <p class="muted" style="font-size: 12px;">As fontes citadas pela IA aparecerão aqui.</p>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="storage.js"></script>
+  <script src="auth.js"></script>
+  <script src="http.js"></script>
+  <script src="process_ai.js"></script>
+</body>
+</html>

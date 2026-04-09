@@ -1,27 +1,34 @@
 from __future__ import annotations
 
-from annotated_types import doc
+from datetime import datetime, timezone
+from typing import List
+
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
-from app.services.email_flow_service import stop_email_flows_on_document_upload
+from app.services.document_extractor import extract_text
 
 from app.core.database import get_db
 from app.auth.dependencies import get_current_user
 
 from app.models.process import Process
 from app.models.document import Document
+from app.models.process_event import ProcessEvent
 from app.schemas.document import DocumentOut
 
+from app.services.email_flow_service import stop_email_flows_on_document_upload
+from app.services.google_oauth import get_valid_access_token
 from app.services.google_drive_service import (
     ensure_process_folder,
     ensure_category_folder,
     upload_file,
     CATEGORY_FOLDERS,
 )
-from app.services.google_oauth import get_valid_access_token
 
 router = APIRouter(prefix="/processes", tags=["Documents"])
+
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 def _validate_category(category: str) -> str:
@@ -34,6 +41,19 @@ def _validate_category(category: str) -> str:
     return c
 
 
+@router.get("/all", response_model=List[DocumentOut])
+def list_all_documents(
+    category: str = None,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    query = db.query(Document).filter(Document.office_id == user.office_id)
+    if category:
+        query = query.filter(Document.category == category)
+    
+    return query.order_by(Document.created_at.desc()).all()
+
+
 @router.get("/{process_id}/documents", response_model=List[DocumentOut])
 def list_documents(
     process_id: int,
@@ -42,19 +62,24 @@ def list_documents(
 ):
     proc = (
         db.query(Process)
-        .filter(Process.id == process_id, Process.office_id == user.office_id)
+        .filter(
+            Process.id == process_id,
+            Process.office_id == user.office_id,
+        )
         .first()
     )
     if not proc:
         raise HTTPException(status_code=404, detail="Process not found")
 
-    docs = (
+    return (
         db.query(Document)
-        .filter(Document.process_id == process_id, Document.office_id == user.office_id)
+        .filter(
+            Document.process_id == process_id,
+            Document.office_id == user.office_id,
+        )
         .order_by(Document.created_at.desc())
         .all()
     )
-    return docs
 
 
 @router.post("/{process_id}/documents/upload", response_model=DocumentOut)
@@ -69,7 +94,10 @@ async def upload_document(
 
     proc = (
         db.query(Process)
-        .filter(Process.id == process_id, Process.office_id == user.office_id)
+        .filter(
+            Process.id == process_id,
+            Process.office_id == user.office_id,
+        )
         .first()
     )
     if not proc:
@@ -77,33 +105,49 @@ async def upload_document(
 
     access_token = get_valid_access_token(db, user.office_id)
 
-    # 1) garante pasta raiz do processo no Drive
+    # 1) Garante pasta raiz do processo no Drive
     if not proc.drive_folder_id:
-        # monta um nome estável e curto (sem title, pq teu model não tem)
-        proc_number = (getattr(proc, "number", None) or getattr(proc, "process_number", None) or "").strip()
+        proc_number = (proc.number or "").strip()
         name_suffix = proc_number[:80] if proc_number else f"id_{proc.id}"
         folder_name = f"Processo_{proc.id}_{name_suffix}"
 
-        folder = ensure_process_folder(access_token=access_token, folder_name=folder_name)
+        folder = ensure_process_folder(
+            access_token=access_token,
+            folder_name=folder_name,
+        )
 
         proc.drive_folder_id = folder["id"]
         db.add(proc)
         db.commit()
         db.refresh(proc)
 
-    # 2) garante subpasta por categoria
+    # 2) Garante subpasta por categoria
     category_folder = ensure_category_folder(
         access_token=access_token,
         process_folder_id=proc.drive_folder_id,
         category_key=category,
     )
 
-    # 3) upload do arquivo na subpasta
+    # 3) Upload do arquivo
     file_bytes = await file.read()
     if not file_bytes:
         raise HTTPException(status_code=400, detail="Empty file")
 
     mime_type = file.content_type or "application/octet-stream"
+    # 3.1) Extrai texto para IA/RAG (não depende do Drive)
+    extracted_text = ""
+    try:
+        extracted_text = extract_text(file_bytes, mime_type)
+    except Exception as e:
+        # não quebra o upload por causa do extractor
+        print(f"[DOC_EXTRACT] failed: {e}")
+        extracted_text = ""
+
+    # evita estourar o SQLite (ajuste o limite se quiser)
+    MAX_TEXT = 200_000
+    if extracted_text and len(extracted_text) > MAX_TEXT:
+        extracted_text = extracted_text[:MAX_TEXT]
+
 
     uploaded = upload_file(
         access_token=access_token,
@@ -113,7 +157,7 @@ async def upload_document(
         mime_type=mime_type,
     )
 
-    # 4) salva no banco
+    # 4) Salva documento no banco
     doc = Document(
         office_id=user.office_id,
         process_id=process_id,
@@ -123,28 +167,51 @@ async def upload_document(
         mime_type=uploaded.get("mimeType") or mime_type,
         drive_file_id=uploaded["id"],
         drive_web_view_link=uploaded.get("webViewLink"),
-
-
-
+        content_text=extracted_text,  # ✅ NOVO
+        created_at=_now(),
     )
 
     db.add(doc)
     db.commit()
     db.refresh(doc)
 
-    # 5) STOP automático do flow de cobrança (se existir)
+    # ✅ 4.1) TIMELINE: evento de documento enviado
+    ev = ProcessEvent(
+        office_id=user.office_id,
+        process_id=process_id,
+        type="document_uploaded",
+        title="Documento enviado",
+        description=f"{doc.file_name} • categoria: {category}",
+        created_at=_now(),
+    )
+    db.add(ev)
+    db.commit()
+
+    # 5) Para automaticamente flows de email (cobrança)
     stopped = stop_email_flows_on_document_upload(
         db=db,
         office_id=user.office_id,
         process_id=process_id,
-        reason=f"Documento recebido: {doc.category}",
+        reason=f"Documento recebido: {category}",
     )
 
+    # ✅ 5.1) (Opcional, mas recomendado) TIMELINE: registra que a cobrança foi parada
+    # stopped normalmente é a quantidade de flows parados (int) ou truthy/falsey.
     if stopped:
-        print(f"[EMAIL_FLOW] stopped={stopped} office={user.office_id} process={process_id}")
+        ev2 = ProcessEvent(
+            office_id=user.office_id,
+            process_id=process_id,
+            type="email_flow_stopped",
+            title="Cobrança encerrada automaticamente",
+            description=f"Motivo: documento recebido ({category})",
+            created_at=_now(),
+        )
+        db.add(ev2)
+        db.commit()
+
+        print(
+            f"[EMAIL_FLOW] stopped={stopped} "
+            f"office={user.office_id} process={process_id}"
+        )
 
     return doc
-
-
-
-

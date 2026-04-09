@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Treinar Estilo - Juris AI</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon"><i class="fas fa-balance-scale"></i></div>
+        <h2>Juris AI</h2>
+      </div>
+      <nav class="nav">
+        <a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a>
+        <a href="process.html"><i class="fas fa-gavel"></i> <span>Processos</span></a>
+        <a href="documents.html"><i class="fas fa-folder-open"></i> <span>Documentos</span></a>
+        <a class="active" href="styles.html"><i class="fas fa-pen-nib"></i> <span>Treinar Estilo</span></a>
+        <a href="attacks.html"><i class="fas fa-shield-halved"></i> <span>Ataque & Defesa</span></a>
+        <a href="meeting.html"><i class="fas fa-microphone"></i> <span>Reuniões</span></a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h1>Treinar Estilo do Escritório</h1>
+        <p style="color: var(--text-secondary);">Faça upload dos seus modelos reais para que a IA aprenda seu padrão de escrita.</p>
+      </header>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div class="panel">
+          <h3 class="panel-title">Upload de Novo Modelo</h3>
+          <div class="form-group">
+            <label>Categoria do Modelo</label>
+            <select id="styleCategory">
+              <option value="MODELOS DE INICIAIS">Petição Inicial</option>
+              <option value="MODELOS CONTESTASÇÃO EMPRESA">Contestação</option>
+              <option value="MODELOS DE RECURSO ORDINARIOS - RO">Recurso Ordinário (RO)</option>
+              <option value="MODELOS DE CONTRARRAZÕES">Contrarrazões</option>
+              <option value="MODELOS DE DECISÕES">Sentenças/Decisões Paradigma</option>
+              <option value="MODELOS DE CALCULOS">Memoriais de Cálculo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Arquivo .docx (Modelo Real)</label>
+            <input type="file" id="styleFile" accept=".docx" />
+          </div>
+          <button id="btnUploadStyle" class="primary" style="width: 100%; justify-content: center;">
+            <i class="fas fa-magic"></i> Ensinar este estilo à IA
+          </button>
+          <div id="uploadStatus" style="margin-top: 16px; text-align: center; font-weight: 500;"></div>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-title">Modelos Ativos</h3>
+          <div id="activeStyles" style="display: flex; flex-direction: column; gap: 12px;">
+            <p class="muted">Carregando modelos atuais...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="storage.js"></script>
+  <script src="auth.js"></script>
+  <script src="http.js"></script>
+  <script src="guard.js"></script>
+  <script>
+    async function loadCurrentStyles() {
+        const container = document.getElementById('activeStyles');
+        try {
+            const data = await apiGet('/styles/current');
+            container.innerHTML = '';
+            
+            for (const [cat, models] of Object.entries(data)) {
+                if (models && models.length > 0) {
+                    const div = document.createElement('div');
+                    div.className = 'alert';
+                    div.style.background = 'rgba(255,255,255,0.05)';
+                    div.style.padding = '12px';
+                    div.style.borderRadius = '8px';
+                    div.style.marginBottom = '8px';
+                    div.innerHTML = `
+                        <div style="font-weight: bold; color: var(--primary);">${cat}</div>
+                        <div style="font-size: 13px; color: var(--text-secondary);">Arquivo: ${models[0].filename}</div>
+                        <div style="font-size: 11px; margin-top: 4px; opacity: 0.6;">Cabeçalho detectado: ${models[0].header.substring(0, 100)}...</div>
+                    `;
+                    container.appendChild(div);
+                }
+            }
+        } catch (e) {
+            container.innerHTML = '<p class="danger">Erro ao carregar estilos.</p>';
+        }
+    }
+
+    document.getElementById('btnUploadStyle').addEventListener('click', async () => {
+        const fileInput = document.getElementById('styleFile');
+        const category = document.getElementById('styleCategory').value;
+        const status = document.getElementById('uploadStatus');
+
+        if (!fileInput.files[0]) return alert("Selecione um arquivo .docx");
+
+        status.textContent = "Processando estilo...";
+        status.style.color = "var(--text-secondary)";
+        
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('category', category);
+
+        try {
+            // Usa a função getToken que agora deve estar disponível via storage.js
+            const token = typeof getToken === 'function' ? getToken() : localStorage.getItem("token");
+            
+            const res = await fetch(`${API}/styles/train?category=${encodeURIComponent(category)}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                status.style.color = 'var(--accent)';
+                status.textContent = "IA treinada com sucesso!";
+                loadCurrentStyles();
+            } else {
+                throw new Error(data.detail || "Erro no upload");
+            }
+        } catch (e) {
+            status.style.color = 'var(--danger)';
+            status.textContent = e.message;
+        }
+    });
+
+    loadCurrentStyles();
+  </script>
+</body>
+</html>

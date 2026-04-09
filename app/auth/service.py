@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
 from jose import jwt
 from passlib.context import CryptContext
+import bcrypt
 
 from app.core.settings import settings
 from app.models.user import User
 
+# Adicionado bcrypt para suporte total aos hashes do banco
 pwd_context = CryptContext(
-    schemes=["pbkdf2_sha256"],
+    schemes=["bcrypt", "pbkdf2_sha256"],
     deprecated="auto"
 )
 
@@ -16,7 +18,15 @@ def get_password_hash(password: str) -> str:
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    try:
+        # Tenta via passlib (que gerencia múltiplos esquemas)
+        return pwd_context.verify(plain, hashed)
+    except Exception:
+        # Fallback manual para bcrypt caso o passlib falhe por erro de versão/formato
+        try:
+            return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
+        except:
+            return False
 
 
 def authenticate_user(db, email: str, password: str):

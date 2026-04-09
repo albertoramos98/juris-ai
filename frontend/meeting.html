@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Reunião com Cliente - Juris AI</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    .record-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 40px;
+      background: rgba(0,0,0,0.2);
+      border: 1px dashed rgba(255,255,255,0.2);
+      border-radius: 16px;
+      margin-top: 24px;
+    }
+    .record-btn {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: var(--danger);
+      color: white;
+      font-size: 32px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+      transition: all 0.3s;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .record-btn:hover { background: #dc2626; transform: scale(1.05); }
+    .record-btn.recording {
+      animation: pulse 1.5s infinite;
+      background: #dc2626;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { box-shadow: 0 0 0 30px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .status-text {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+    .status-sub {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .audio-player {
+      margin-top: 24px;
+      width: 100%;
+      max-width: 400px;
+      display: none;
+      border-radius: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon"><i class="fas fa-balance-scale"></i></div>
+        <h2>Juris AI</h2>
+      </div>
+
+      <nav class="nav">
+        <a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a>
+        <a href="process.html"><i class="fas fa-gavel"></i> <span>Processos</span></a>
+        <a href="documents.html"><i class="fas fa-folder-open"></i> <span>Documentos</span></a>
+        <a href="attacks.html"><i class="fas fa-shield-halved"></i> <span>Ataque & Defesa</span></a>
+        <a class="active" href="meeting.html"><i class="fas fa-microphone"></i> <span>Reuniões</span></a>
+        <a href="import.html"><i class="fas fa-file-import"></i> <span>Importar</span></a>
+        <a href="team.html"><i class="fas fa-users"></i> <span>Equipe</span></a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>Captação de Reunião</h1>
+          <p style="color: var(--text-secondary); font-size: 14px;">Grave a conversa com o cliente e a IA transcreverá para o processo.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="secondary" type="button" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+      </header>
+
+      <div style="max-width: 800px; margin: 0 auto;">
+        <div class="panel">
+          
+          <div class="form-group" style="max-width: 400px; margin: 0 auto 24px;">
+            <label style="text-align: center;"><i class="fas fa-folder-open"></i> Vincular ao Processo</label>
+            <select id="processSelect" style="text-align: center; font-size: 16px;">
+              <option value="">Carregando processos...</option>
+              <option value="NEW_PROCESS" style="font-weight: bold; color: var(--accent);">+ CRIAR NOVO PROCESSO (VIA ÁUDIO)</option>
+            </select>
+          </div>
+
+          <div class="record-panel">
+            <button id="btnRecord" class="record-btn"><i class="fas fa-microphone"></i></button>
+            <div id="recordingControls" style="display: none; gap: 16px; margin-bottom: 24px;">
+              <button id="btnPause" class="secondary" title="Pausar"><i class="fas fa-pause"></i> Pausar</button>
+              <button id="btnCancel" class="danger" title="Cancelar"><i class="fas fa-times"></i> Cancelar</button>
+            </div>
+            
+            <div id="statusText" class="status-text">Pronto para gravar</div>
+            <div id="statusSub" class="status-sub">Clique no microfone para iniciar a captação de áudio.</div>
+            
+            <audio id="audioPlayback" controls class="audio-player"></audio>
+            
+            <button id="btnSave" style="display: none; margin-top: 24px; padding: 14px 32px; font-size: 16px;" class="primary">
+              <i class="fas fa-brain"></i> Transcrever e Salvar no Processo
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de Rascunho de Peça -->
+  <div id="petitionModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 900px; width: 95%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2 style="color: var(--primary); margin: 0;"><i class="fas fa-file-signature"></i> Petição Gerada via Áudio</h2>
+        <button onclick="document.getElementById('petitionModal').style.display='none'" class="close-modal"><i class="fas fa-times"></i></button>
+      </div>
+      <div id="modalBody" style="background: rgba(0,0,0,0.2); padding: 24px; border-radius: 12px; max-height: 60vh; overflow-y: auto; white-space: pre-wrap; font-family: 'Arial', sans-serif; line-height: 1.6;">
+        Processando peça...
+      </div>
+      <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+        <button id="btnGoToProcess" class="primary">Ir para o Processo</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="storage.js"></script>
+  <script src="auth.js"></script>
+  <script src="http.js"></script>
+  <script src="meeting.js"></script>
+</body>
+</html>

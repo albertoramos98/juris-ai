@@ -13,7 +13,10 @@ class User(Base):
 
     office_id = Column(Integer, ForeignKey("offices.id"), nullable=False, index=True)
 
-    # governança (novo)
+    # governança
     is_owner = Column(Boolean, default=False, nullable=False)
+
+    # acesso (soft delete)
+    is_active = Column(Boolean, default=True, nullable=False)
 
     office = relationship("Office", back_populates="users")

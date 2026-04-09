@@ -5,115 +5,84 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Documentos - Juris AI</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
+
 <body>
-
-<div class="app-shell">
-
-  <aside class="sidebar">
-    <div class="brand">
-      <div>
-        <strong>Juris AI</strong><br/>
-        <span>Documentos</span>
-      </div>
-      <span style="width:10px;height:10px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 4px rgba(79,140,255,.18)"></span>
-    </div>
-
-    <nav class="nav">
-      <a href="dashboard.html">🏠 Dashboard</a>
-      <a class="active" href="documents.html">📁 Documentos</a>
-      <a href="process.html">📌 Processos</a>
-      <a href="attacks.html">⚔️ Ataque & Defesa</a>
-
-      <div class="hint">
-        Docs agora saíram do dashboard. Aqui é o módulo certo.
-      </div>
-    </nav>
-  </aside>
-
-  <main class="main">
-
-    <header class="topbar">
-      <h1>Documentos</h1>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <button class="secondary" id="btnRefresh">Recarregar</button>
-        <button id="btnLogout">Sair</button>
-      </div>
-    </header>
-
-    <section class="statusbar" style="margin-top:0;">
-      <div class="status-left">
-        <span class="dot dot-green" id="docsDot"></span>
-        <strong id="docsTitle">Docs por processo</strong>
-        <span class="muted" id="docsSub">Selecione um processo.</span>
+  <div class="app-shell">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon"><i class="fas fa-balance-scale"></i></div>
+        <h2>Juris AI</h2>
       </div>
 
-      <div class="status-right">
-        <span class="pill">Processo: <b id="stProcess">—</b></span>
-        <span class="pill">Total: <b id="stTotal">0</b></span>
-        <span class="pill danger">Erro: <b id="stErr">0</b></span>
-      </div>
-    </section>
+      <nav class="nav">
+        <a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a>
+        <a href="process.html"><i class="fas fa-gavel"></i> <span>Processos</span></a>
+        <a class="active" href="documents.html"><i class="fas fa-folder-open"></i> <span>Documentos</span></a>
+        <a href="styles.html"><i class="fas fa-pen-nib"></i> <span>Treinar Estilo</span></a>
+        <a href="knowledge.html"><i class="fas fa-book"></i> <span>Biblioteca Jurídica</span></a>
+        <a href="attacks.html"><i class="fas fa-shield-halved"></i> <span>Ataque & Defesa</span></a>
+        <a href="meeting.html"><i class="fas fa-microphone"></i> <span>Reuniões</span></a>
+        <a href="import.html"><i class="fas fa-file-import"></i> <span>Importar</span></a>
+        <a href="team.html"><i class="fas fa-users"></i> <span>Equipe</span></a>
+      </nav>
+    </aside>
 
-    <section class="grid">
-      <div class="box">
-        <h2>Selecionar processo</h2>
-
-        <div class="form-box">
-          <h3>Processo</h3>
-          <select id="processSelect">
-            <option value="">Carregando processos...</option>
-          </select>
-          <div class="muted" style="margin-top:8px;" id="processMeta"></div>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>Gestão de Documentos</h1>
+          <p style="color: var(--text-secondary); font-size: 14px;">Visão global de todos os arquivos anexados nos processos do escritório.</p>
         </div>
+        <div class="topbar-actions">
+          <button class="secondary" id="btnRefresh" type="button"><i class="fas fa-sync-alt"></i> Recarregar</button>
+          <button class="secondary" type="button" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+      </header>
 
-        <div class="form-box">
-          <h3>Upload de documento</h3>
-
-          <div class="row" style="display:flex; gap:10px; flex-wrap:wrap;">
-            <select id="docCategory" style="min-width:220px;">
-              <option value="inicial">Inicial</option>
+      <div class="panel">
+        <div class="panel-header">
+          <h3 class="panel-title"><i class="fas fa-folder-open"></i> Arquivos Indexados</h3>
+          <div style="display: flex; gap: 12px; width: 300px;">
+            <select id="filterCategory" style="padding: 8px 12px;">
+              <option value="">Todas as Categorias</option>
+              <option value="inicial">Petição Inicial</option>
               <option value="procuracao">Procuração</option>
-              <option value="contrato">Contrato</option>
-              <option value="docs_cliente">Docs do Cliente</option>
-              <option value="outros">Outros</option>
+              <option value="contrato">Contrato/Honorários</option>
+              <option value="docs_cliente">Documentos do Cliente</option>
             </select>
-            <input type="file" id="docFile" style="flex:1; min-width:220px;" />
           </div>
+        </div>
 
-          <div style="display:flex; gap:10px; margin-top:10px;">
-            <button id="btnUpload" style="flex:1;" disabled>Upload</button>
-            <button id="btnLoad" class="secondary" style="flex:1;" disabled>Listar docs</button>
-          </div>
-
-          <p class="muted" id="uploadHint" style="margin:10px 0 0;">Escolha um processo primeiro.</p>
+        <div style="overflow-x: auto;">
+          <table class="data-table" id="docsTable">
+            <thead>
+              <tr>
+                <th><i class="fas fa-file-alt"></i> Nome do Arquivo</th>
+                <th><i class="fas fa-tag"></i> Categoria</th>
+                <th><i class="fas fa-calendar-day"></i> Data</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="docsTbody">
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 40px;">Carregando documentos...</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
+    </main>
+  </div>
 
-      <div class="box">
-        <h2>Lista</h2>
-
-        <div class="row" style="display:flex; gap:10px; flex-wrap:wrap;">
-          <input id="searchInput" placeholder="Buscar por nome/categoria..." style="flex:1; min-width:240px;" />
-          <select id="filterCategory" style="min-width:200px;">
-            <option value="">Todas categorias</option>
-            <option value="inicial">Inicial</option>
-            <option value="procuracao">Procuração</option>
-            <option value="contrato">Contrato</option>
-            <option value="docs_cliente">Docs do Cliente</option>
-            <option value="outros">Outros</option>
-          </select>
-        </div>
-
-        <div id="docsList" style="margin-top:12px;">
-          <p class="muted">Selecione um processo para exibir documentos.</p>
-        </div>
-      </div>
-    </section>
-
-    <script type="module" src="documents.js"></script>
-  </main>
-</div>
-
+  <script src="config.js"></script>
+  <script src="storage.js"></script>
+  <script src="auth.js"></script>
+  <script src="http.js"></script>
+  <script src="guard.js"></script>
+  <script src="documents.js"></script>
 </body>
 </html>

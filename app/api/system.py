@@ -136,10 +136,14 @@ def system_unlock(
             detail="Password is required.",
         )
 
-    # 2) senha mestra
+    # 2) senha mestra OU senha do próprio usuário
+    from app.auth.service import verify_password
+    
     secret = settings.OFFICE_OVERRIDE_SECRET.strip()
+    is_master_secret = (password == secret)
+    is_user_password = verify_password(password, user.password)
 
-    if password != secret:
+    if not (is_master_secret or is_user_password):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid unlock password.",

@@ -1,5 +1,4 @@
-import { API } from "./config.js";
-import { logout as doLogout } from "./auth.js";
+// Removidos imports para compatibilidade global
 
 function getToken(){ return localStorage.getItem("token"); }
 function authHeaders(extra = {}){
@@ -11,287 +10,381 @@ function escapeHtml(str){
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[s]));
 }
-async function readError(res){
-  try{
-    const ct = res.headers.get("content-type") || "";
-    if (ct.includes("application/json")){
-      const d = await res.json();
-      return d?.detail || JSON.stringify(d);
+
+/* =====================
+   STATE
+===================== */
+let allProcesses = [];
+let selectedProcessId = null;
+
+/* =====================
+   UI ELEMENTS
+===================== */
+const selectEl = document.getElementById("processSelect");
+const metaEl = document.getElementById("processMeta");
+const timelineEl = document.getElementById("timelineList");
+const deadlinesEl = document.getElementById("deadlinesList");
+const docsEl = document.getElementById("docsList");
+
+/* =====================
+   CORE FUNCTIONS
+===================== */
+async function loadProcesses() {
+  try {
+    const res = await fetch(`${API}/processes`, { headers: authHeaders() });
+    if (res.status === 401) { window.location.href = "index.html"; return; }
+    
+    allProcesses = await res.json();
+    renderSelect();
+    
+    // Auto-seleciona se houver ID na URL ou no localStorage
+    const pid = new URLSearchParams(window.location.search).get("id") || localStorage.getItem("selected_process_id");
+    if (pid) {
+        selectEl.value = pid;
+        selectProcess(pid);
     }
-    return await res.text();
-  }catch{ return "Erro desconhecido"; }
-}
-async function apiFetch(path, options = {}){
-  let res;
-  try{
-    res = await fetch(`${API}${path}`, { ...options, headers: authHeaders(options.headers || {}) });
-  }catch(e){
-    console.error(e);
-    alert("Falha de rede. Confere o backend.");
-    return null;
+  } catch (e) {
+    console.error("Erro ao carregar processos:", e);
   }
-  if (res.status === 401){
-    doLogout();
-    window.location.href="index.html";
-    return null;
-  }
-  if (res.status === 423){
-    let payload = {};
-    try{
-      const data = await res.json();
-      payload = data?.detail || data || {};
-    }catch{ payload = { message: "Office blocked." }; }
-    localStorage.setItem("juris_block_info", JSON.stringify(payload));
-    window.location.href="dashboard.html";
-    return null;
-  }
-  return res;
 }
 
-const el = {
-  processSelect: document.getElementById("processSelect"),
-  processMeta: document.getElementById("processMeta"),
-  btnRefresh: document.getElementById("btnRefresh"),
-
-  deadlineDesc: document.getElementById("deadline-desc"),
-  deadlineDate: document.getElementById("deadline-date"),
-  deadlineResp: document.getElementById("deadline-resp"),
-  deadlineCritical: document.getElementById("deadline-critical"),
-  btnCreateDeadline: document.getElementById("btnCreateDeadline"),
-
-  docCategory: document.getElementById("docCategory"),
-  docFile: document.getElementById("docFile"),
-  btnUploadDoc: document.getElementById("btnUploadDoc"),
-
-  deadlinesList: document.getElementById("deadlinesList"),
-  docsList: document.getElementById("docsList"),
-};
-
-let state = { processes:[], selected:null, deadlines:[], docs:[] };
-
-window.logout = function(){
-  doLogout();
-  window.location.href="index.html";
-};
-
-function enableActions(ok){
-  el.btnCreateDeadline.disabled = !ok;
-  el.btnUploadDoc.disabled = !ok;
+function renderSelect() {
+  if (!selectEl) return;
+  selectEl.innerHTML = '<option value="">Selecione um processo...</option>';
+  allProcesses.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = `${p.client_name} - ${p.action_type || 'Sem Ação'}`;
+    selectEl.appendChild(opt);
+  });
 }
 
-function renderProcesses(){
-  if (!state.processes.length){
-    el.processSelect.innerHTML = `<option value="">Nenhum processo</option>`;
-    enableActions(false);
+async function selectProcess(id) {
+  if (!id) {
+    selectedProcessId = null;
     return;
   }
-  el.processSelect.innerHTML =
-    `<option value="">Selecione</option>` +
-    state.processes.map(p=>{
-      const label = p.number ? `Processo ${p.number}` : `Processo #${p.id}`;
-      return `<option value="${p.id}">${escapeHtml(label)}</option>`;
-    }).join("");
-}
-
-function renderDeadlines(){
-  if (!state.selected){
-    el.deadlinesList.innerHTML = `<p class="muted">Selecione um processo.</p>`;
-    return;
-  }
-  const list = state.deadlines.filter(d => Number(d.process_id) === Number(state.selected.id));
-
-  if (!list.length){
-    el.deadlinesList.innerHTML = `<p class="muted">Nenhum prazo nesse processo.</p>`;
-    return;
-  }
-
-  el.deadlinesList.innerHTML = list.map(d=>{
-    const badge = d.is_critical
-      ? `<span class="badge badge-danger">CRÍTICO</span>`
-      : `<span class="badge badge-muted">NORMAL</span>`;
-
-    return `
-      <div class="deadline-item" style="margin-bottom:10px;">
-        <div class="deadline-left">
-          <div class="deadline-title">${badge}<span>${escapeHtml(d.description)}</span></div>
-          <div class="deadline-meta">Vence: ${escapeHtml(d.due_date)} • Resp: ${escapeHtml(d.responsible)}</div>
-        </div>
-        <div class="deadline-right" style="display:flex; gap:8px;">
-          <button class="secondary btn-small" data-sync="${d.id}">📅 Calendar</button>
-          ${(!d.completed && d.is_critical) ? `<button class="btn-small" data-complete="${d.id}">✅ Concluir</button>` : ``}
-        </div>
-      </div>
+  selectedProcessId = id;
+  localStorage.setItem("selected_process_id", id);
+  
+  const p = allProcesses.find(x => String(x.id) === String(id));
+  if (p) {
+    metaEl.innerHTML = `
+      <strong>Cliente:</strong> ${p.client_name}<br/>
+      <strong>Ação:</strong> ${p.action_type || 'N/A'}<br/>
+      <strong>Tribunal:</strong> ${p.court || 'N/A'}
     `;
-  }).join("");
+    
+    // Status de indexação
+    const statusEl = document.getElementById("indexStatus");
+    if (statusEl) {
+        if (p.rag_indexed_at) {
+            statusEl.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i> Treinado em: ${new Date(p.rag_indexed_at).toLocaleString()}<br/>Chunks: ${p.rag_chunk_count}`;
+        } else {
+            statusEl.innerHTML = `<i class="fas fa-exclamation-triangle" style="color:var(--gold)"></i> Cérebro não treinado para este caso.`;
+        }
+    }
+  }
 
-  // handlers
-  el.deadlinesList.querySelectorAll("[data-sync]").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      const id = btn.getAttribute("data-sync");
-      const res = await apiFetch(`/deadlines/${id}/sync_calendar`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({}) });
-      if (!res) return;
-      if (!res.ok){ alert(await readError(res)); return; }
-      const data = await res.json();
-      const link = data.openLink || data.htmlLink;
-      if (link) window.open(link, "_blank");
-      else alert("Evento criado.");
+  // Habilita botões
+  document.getElementById("btnCreateDeadline").disabled = false;
+  document.getElementById("btnUploadDoc").disabled = false;
+  document.getElementById("btnStartEmailFlow").disabled = false;
+  document.getElementById("btnPauseEmailFlow").disabled = false;
+  document.getElementById("btnStopEmailFlow").disabled = false;
+  const btnIndex = document.getElementById("btnIndexAI");
+  if (btnIndex) btnIndex.disabled = false;
+
+  loadTimeline(id);
+  loadDeadlines(id);
+  loadDocs(id);
+  loadEmailFlow(id);
+}
+
+/* =====================
+   EMAIL FLOW FUNCTIONS
+===================== */
+async function loadEmailFlow(processId) {
+    const statusEl = document.getElementById("emailFlowStatus");
+    try {
+        const res = await fetch(`${API}/email-flows/process/${processId}`, { headers: authHeaders() });
+        if (res.status === 404) {
+            statusEl.textContent = "Status: Nenhum fluxo criado para este processo.";
+            return;
+        }
+        const flow = await res.json();
+        const activeText = flow.active ? `<span style="color:var(--accent)">ATIVO</span>` : `<span style="color:var(--danger)">INATIVO</span>`;
+        statusEl.innerHTML = `Status: ${activeText} | Tentativas: ${flow.attempts}/${flow.max_attempts} | Intervalo: ${flow.interval_days} dias`;
+        
+        if (flow.stopped_reason) {
+            statusEl.innerHTML += `<br/><small class="muted">Parado por: ${flow.stopped_reason}</small>`;
+        }
+    } catch (e) {
+        statusEl.textContent = "Status: Erro ao carregar fluxo.";
+    }
+}
+
+async function startEmailFlow() {
+    if (!selectedProcessId) return;
+    try {
+        const res = await fetch(`${API}/email-flows/`, {
+            method: 'POST',
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({
+                process_id: parseInt(selectedProcessId),
+                active: true,
+                interval_days: 3,
+                max_attempts: 10,
+                template: "cobranca_docs",
+                stop_on_any_upload: true
+            })
+        });
+        if (!res.ok) throw new Error("Erro ao iniciar cobrança.");
+        alert("Cobrança automática iniciada!");
+        loadEmailFlow(selectedProcessId);
+    } catch (e) { alert(e.message); }
+}
+
+async function pauseEmailFlow() {
+    if (!selectedProcessId) return;
+    try {
+        const res = await fetch(`${API}/email-flows/process/${selectedProcessId}`, { headers: authHeaders() });
+        const flow = await res.json();
+        const resPause = await fetch(`${API}/email-flows/${flow.id}/pause`, { method: 'POST', headers: authHeaders() });
+        if (!resPause.ok) throw new Error("Erro ao pausar.");
+        alert("Cobrança pausada.");
+        loadEmailFlow(selectedProcessId);
+    } catch (e) { alert(e.message); }
+}
+
+async function stopEmailFlow() {
+    if (!selectedProcessId) return;
+    try {
+        const res = await fetch(`${API}/email-flows/process/${selectedProcessId}`, { headers: authHeaders() });
+        const flow = await res.json();
+        const resStop = await fetch(`${API}/email-flows/${flow.id}/stop`, { method: 'POST', headers: authHeaders() });
+        if (!resStop.ok) throw new Error("Erro ao encerrar.");
+        alert("Cobrança encerrada permanentemente.");
+        loadEmailFlow(selectedProcessId);
+    } catch (e) { alert(e.message); }
+}
+
+async function indexProcessForAI() {
+    if (!selectedProcessId) return;
+    const btn = document.getElementById("btnIndexAI");
+    const statusEl = document.getElementById("indexStatus");
+    
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Treinando...`;
+    statusEl.textContent = "Extraindo textos e gerando vetores (RAG)...";
+
+    try {
+        const res = await fetch(`${API}/rag/process/${selectedProcessId}/index`, {
+            method: 'POST',
+            headers: authHeaders()
+        });
+        const data = await res.json();
+        
+        if (res.status === 400) {
+            throw new Error(data.detail || "Parece que este processo não possui documentos indexáveis. Faça upload de PDFs ou Word primeiro.");
+        }
+        
+        if (!res.ok) throw new Error(data.detail || "Erro na indexação");
+
+        alert(`Sucesso! IA treinada com ${data.chunks} fragmentos de documentos.`);
+        loadProcesses(); // recarrega para atualizar data de indexação
+    } catch(e) {
+        console.error("Erro completo:", e);
+        const msg = e.message || JSON.stringify(e);
+        alert("Erro ao indexar: " + (msg.includes("object") ? "Falha na comunicação com o servidor." : msg));
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fas fa-sync"></i> Indexar para IA`;
+    }
+}
+
+async function loadTimeline(id) {
+    timelineEl.innerHTML = "<p class='muted'>Carregando histórico...</p>";
+    try {
+        const res = await fetch(`${API}/processes/${id}/events`, { headers: authHeaders() });
+        const events = await res.json();
+        timelineEl.innerHTML = events.map(e => `
+            <div class="alert" style="margin-bottom:8px; background:rgba(255,255,255,0.03)">
+                <small class="muted">${new Date(e.created_at).toLocaleString()}</small>
+                <div>${e.description}</div>
+            </div>
+        `).join("") || "Nenhum evento registrado.";
+    } catch(e) { timelineEl.innerHTML = "Erro ao carregar."; }
+}
+
+async function loadDeadlines(id) {
+    deadlinesEl.innerHTML = "<p class='muted'>Carregando prazos...</p>";
+    try {
+        const res = await fetch(`${API}/deadlines?process_id=${id}`, { headers: authHeaders() });
+        const data = await res.json();
+        deadlinesEl.innerHTML = data.map(d => `
+            <div class="panel" style="padding:12px; margin-bottom:8px; border-left:4px solid ${d.is_critical ? 'var(--danger)' : 'var(--primary)'}">
+                <div style="display:flex; justify-content:space-between">
+                    <strong>${d.description}</strong>
+                    <span class="badge ${d.completed ? 'badge-active' : 'badge-pending'}">${d.completed ? 'Concluído' : 'Pendente'}</span>
+                </div>
+                <small class="muted">Vencimento: ${d.due_date}</small>
+            </div>
+        `).join("") || "Nenhum prazo criado.";
+    } catch(e) { deadlinesEl.innerHTML = "Erro ao carregar."; }
+}
+
+async function loadDocs(id) {
+    docsEl.innerHTML = "<p class='muted'>Carregando documentos...</p>";
+    try {
+        const res = await fetch(`${API}/processes/${id}/documents`, { headers: authHeaders() });
+        const data = await res.json();
+        
+        // Atualiza a checklist de obrigatoriedade
+        updateDocumentChecklist(data);
+
+        docsEl.innerHTML = data.map(doc => `
+            <div class="alert" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03)">
+                <div>
+                    <i class="fas fa-file-pdf" style="color:var(--danger)"></i> ${doc.file_name}
+                    <br/><small class="muted">${doc.category}</small>
+                </div>
+                <a href="${doc.drive_web_view_link}" target="_blank" class="secondary btn-small">Ver no Drive</a>
+            </div>
+        `).join("") || "Nenhum documento anexado.";
+    } catch(e) { docsEl.innerHTML = "Erro ao carregar."; }
+}
+
+function updateDocumentChecklist(docs) {
+    const categoriesFound = new Set(docs.map(d => d.category));
+    const items = document.querySelectorAll('.checklist-item');
+    let foundCount = 0;
+
+    items.forEach(item => {
+        const cat = item.dataset.category;
+        const icon = item.querySelector('i');
+        
+        if (categoriesFound.has(cat)) {
+            item.style.color = "var(--accent)";
+            icon.className = "fas fa-check-circle";
+            foundCount++;
+        } else {
+            item.style.color = "var(--text-secondary)";
+            icon.className = "far fa-circle";
+        }
     });
-  });
 
-  el.deadlinesList.querySelectorAll("[data-complete]").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      const id = btn.getAttribute("data-complete");
-      const res = await apiFetch(`/deadlines/${id}/complete`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({}) });
-      if (!res) return;
-      if (!res.ok){ alert(await readError(res)); return; }
-      await loadDeadlines();
-      alert("Concluído ✅");
+    const badge = document.getElementById("docProgressBadge");
+    if (badge) {
+        if (foundCount === items.length) {
+            badge.className = "badge badge-active";
+            badge.textContent = "Completo";
+        } else if (foundCount > 0) {
+            badge.className = "badge badge-pending";
+            badge.style.background = "rgba(59, 130, 246, 0.1)";
+            badge.style.color = "var(--primary)";
+            badge.textContent = `Em progresso (${foundCount}/${items.length})`;
+        } else {
+            badge.className = "badge badge-pending";
+            badge.textContent = "Pendente";
+        }
+    }
+}
+
+/* =====================
+   CORE FUNCTIONS (UPLOAD & DEADLINES)
+===================== */
+async function uploadDocument() {
+    const fileInput = document.getElementById("docFile");
+    const category = document.getElementById("docCategory").value;
+    
+    if (!selectedProcessId) return alert("Selecione um processo.");
+    if (!fileInput.files[0]) return alert("Selecione um arquivo.");
+
+    const btn = document.getElementById("btnUploadDoc");
+    btn.disabled = true;
+    btn.textContent = "Enviando...";
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    formData.append("category", category);
+
+    try {
+        const res = await fetch(`${API}/processes/${selectedProcessId}/documents/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${getToken()}` },
+            body: formData
+        });
+
+        if (!res.ok) throw new Error("Falha no upload.");
+
+        alert("Documento enviado e salvo no Google Drive!");
+        fileInput.value = "";
+        loadDocs(selectedProcessId);
+        loadTimeline(selectedProcessId);
+    } catch (e) {
+        alert(e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Fazer Upload";
+    }
+}
+
+async function createDeadline() {
+    const desc = document.getElementById("deadline-desc").value;
+    const date = document.getElementById("deadline-date").value;
+    const resp = document.getElementById("deadline-resp").value;
+    const isCritical = document.getElementById("deadline-critical").checked;
+
+    if (!selectedProcessId || !desc || !date) return alert("Preencha descrição e data.");
+
+    const btn = document.getElementById("btnCreateDeadline");
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`${API}/deadlines?process_id=${selectedProcessId}`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                description: desc,
+                due_date: date,
+                responsible: resp,
+                is_critical: isCritical
+            })
+        });
+
+        if (!res.ok) throw new Error("Erro ao criar prazo.");
+
+        alert("Prazo criado e agendado no Google Calendar!");
+        document.getElementById("deadline-desc").value = "";
+        loadDeadlines(selectedProcessId);
+        loadTimeline(selectedProcessId);
+    } catch (e) {
+        alert(e.message);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+/* =====================
+   EVENT BINDINGS
+===================== */
+document.addEventListener("DOMContentLoaded", () => {
+    loadProcesses();
+    
+    selectEl?.addEventListener("change", (e) => selectProcess(e.target.value));
+    
+    document.getElementById("btnRefresh")?.addEventListener("click", loadProcesses);
+    document.getElementById("btnUploadDoc")?.addEventListener("click", uploadDocument);
+    document.getElementById("btnCreateDeadline")?.addEventListener("click", createDeadline);
+    
+    document.getElementById("btnRefreshTimeline")?.addEventListener("click", () => {
+        if(selectedProcessId) loadTimeline(selectedProcessId);
     });
-  });
-}
+    
+    document.getElementById("btnIndexAI")?.addEventListener("click", indexProcessForAI);
 
-function renderDocs(){
-  if (!state.selected){
-    el.docsList.innerHTML = `<p class="muted">Selecione um processo.</p>`;
-    return;
-  }
-  if (!state.docs.length){
-    el.docsList.innerHTML = `<p class="muted">Sem documentos.</p>`;
-    return;
-  }
-
-  el.docsList.innerHTML = state.docs.map(d=>{
-    const link = d.drive_web_view_link
-      ? `<a href="${escapeHtml(d.drive_web_view_link)}" target="_blank"><button class="secondary btn-small">Abrir</button></a>`
-      : `<span class="muted">sem link</span>`;
-
-    return `
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;
-                  padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:14px;
-                  background: rgba(255,255,255,.04);margin-bottom:10px;">
-        <div style="min-width:0;">
-          <div style="font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-            ${escapeHtml(d.file_name)}
-          </div>
-          <div class="muted" style="margin-top:4px;">
-            ${escapeHtml(d.category)} • ${escapeHtml(d.status)}
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;">${link}</div>
-      </div>
-    `;
-  }).join("");
-}
-
-async function loadProcesses(){
-  const res = await apiFetch(`/processes/`);
-  if (!res) return;
-  if (!res.ok){ alert(await readError(res)); return; }
-  state.processes = await res.json();
-  renderProcesses();
-}
-
-async function loadDeadlines(){
-  const res = await apiFetch(`/deadlines/`);
-  if (!res) return;
-  if (!res.ok){ alert(await readError(res)); return; }
-  state.deadlines = await res.json();
-  renderDeadlines();
-}
-
-async function loadDocs(pid){
-  el.docsList.innerHTML = `<p class="muted">Carregando...</p>`;
-  const res = await apiFetch(`/processes/${pid}/documents`);
-  if (!res) return;
-  if (!res.ok){ alert(await readError(res)); return; }
-  state.docs = await res.json();
-  renderDocs();
-}
-
-async function createDeadlineForProcess(){
-  if (!state.selected) return;
-
-  const description = (el.deadlineDesc.value || "").trim();
-  const due_date = el.deadlineDate.value || "";
-  const responsible = (el.deadlineResp.value || "").trim();
-  const is_critical = !!el.deadlineCritical.checked;
-
-  if (!description || !due_date || !responsible) return alert("Preencha descrição, data e responsável.");
-
-  const res = await apiFetch(`/deadlines/`, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      description,
-      due_date,
-      responsible,
-      process_id: state.selected.id,
-      is_critical
-    })
-  });
-
-  if (!res) return;
-  if (!res.ok){ alert(await readError(res)); return; }
-
-  el.deadlineDesc.value = "";
-  el.deadlineDate.value = "";
-  el.deadlineResp.value = "";
-  el.deadlineCritical.checked = false;
-
-  await loadDeadlines();
-  alert("Prazo criado ✅");
-}
-
-async function uploadDocForProcess(){
-  if (!state.selected) return;
-  const file = el.docFile.files?.[0];
-  if (!file) return alert("Selecione um arquivo.");
-
-  const fd = new FormData();
-  fd.append("category", el.docCategory.value);
-  fd.append("file", file);
-
-  const res = await apiFetch(`/processes/${state.selected.id}/documents/upload`, { method:"POST", body: fd });
-  if (!res) return;
-  if (!res.ok){ alert(await readError(res)); return; }
-
-  el.docFile.value = "";
-  await loadDocs(state.selected.id);
-  alert("Upload concluído ✅");
-}
-
-function onProcessChange(){
-  const id = Number(el.processSelect.value || 0);
-  state.selected = state.processes.find(p=>p.id === id) || null;
-
-  if (!state.selected){
-    el.processMeta.innerText = "";
-    enableActions(false);
-    state.docs = [];
-    renderDeadlines();
-    renderDocs();
-    return;
-  }
-
-  enableActions(true);
-  el.processMeta.innerText = `ID: ${state.selected.id} • Vara: ${state.selected.court || "—"} • Tipo: ${state.selected.type || "—"} • Nº: ${state.selected.number || "—"}`;
-
-  loadDeadlines();
-  loadDocs(state.selected.id);
-}
-
-el.processSelect.addEventListener("change", onProcessChange);
-el.btnRefresh.addEventListener("click", async ()=>{
-  await loadProcesses();
-  if (state.selected?.id){
-    await loadDeadlines();
-    await loadDocs(state.selected.id);
-  }
+    document.getElementById("btnStartEmailFlow")?.addEventListener("click", startEmailFlow);
+    document.getElementById("btnPauseEmailFlow")?.addEventListener("click", pauseEmailFlow);
+    document.getElementById("btnStopEmailFlow")?.addEventListener("click", stopEmailFlow);
 });
-el.btnCreateDeadline.addEventListener("click", createDeadlineForProcess);
-el.btnUploadDoc.addEventListener("click", uploadDocForProcess);
-
-(function init(){
-  if (!getToken()){ window.location.href="index.html"; return; }
-  loadProcesses();
-})();

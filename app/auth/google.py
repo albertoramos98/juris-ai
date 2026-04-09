@@ -11,8 +11,8 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.settings import settings
 from app.models.user import User
-from app.models.office import Office  # ajuste se necessário
-from app.models.google_token import GoogleToken  # <<< ADD
+from app.models.office import Office
+from app.models.google_token import GoogleToken
 
 router = APIRouter(prefix="/auth/google", tags=["Auth - Google"])
 
@@ -26,13 +26,10 @@ SCOPES = [
     "profile",
     "https://www.googleapis.com/auth/drive.metadata.readonly",
     "https://www.googleapis.com/auth/calendar",
-     "https://www.googleapis.com/auth/drive.file"
+    "https://www.googleapis.com/auth/drive.file",
 ]
 
 
-# ======================
-# helpers: state + jwt
-# ======================
 def _make_state() -> str:
     payload = {
         "nonce": token_urlsafe(16),
@@ -45,11 +42,17 @@ def _decode_state(state: str) -> dict:
     return jwt.decode(state, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
 
 
-def _create_access_token(email: str) -> str:
+def _create_access_token(user: User) -> str:
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
-    payload = {"sub": email, "exp": int(expire.timestamp())}
+    payload = {
+        "sub": str(user.id),
+        "email": user.email,
+        "office_id": user.office_id,
+        "is_owner": user.is_owner,
+        "exp": int(expire.timestamp()),
+    }
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
@@ -65,9 +68,9 @@ def google_login():
         "redirect_uri": settings.GOOGLE_REDIRECT_URI,
         "response_type": "code",
         "scope": " ".join(SCOPES),
-        "access_type": "offline",            # <<< precisa pra refresh token
+        "access_type": "offline",
         "include_granted_scopes": "true",
-        "prompt": "consent",                 # <<< força refresh token na primeira vez
+        "prompt": "consent",
         "state": state,
     }
 
@@ -80,13 +83,11 @@ def google_callback(
     state: str,
     db: Session = Depends(get_db),
 ):
-    # 1) valida state (anti-CSRF)
     try:
         _decode_state(state)
     except JWTError:
         raise HTTPException(status_code=400, detail="Invalid state")
 
-    # 2) troca code por tokens
     data = {
         "client_id": settings.GOOGLE_CLIENT_ID,
         "client_secret": settings.GOOGLE_CLIENT_SECRET,
@@ -102,7 +103,7 @@ def google_callback(
     token_data = resp.json()
 
     access_token = token_data.get("access_token")
-    refresh_token = token_data.get("refresh_token")  # pode vir None dependendo do consent
+    refresh_token = token_data.get("refresh_token")
     token_type = token_data.get("token_type")
     scope = token_data.get("scope")
     expires_in = token_data.get("expires_in")
@@ -117,7 +118,6 @@ def google_callback(
         except Exception:
             expires_at = None
 
-    # 3) pega email do Google via userinfo
     u = requests.get(
         GOOGLE_USERINFO_URL,
         headers={"Authorization": f"Bearer {access_token}"},
@@ -133,42 +133,29 @@ def google_callback(
     if not email or not email_verified:
         raise HTTPException(status_code=400, detail="Google email not verified or missing")
 
-    # 4) garante office da demo (multi-user no mesmo escritório)
-    office = db.query(Office).first()
-    if not office:
-        office = Office(name="Office Demo")
+    # usuário existente => usa office dele
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        office = Office(name=f"Office {email}")
         db.add(office)
         db.commit()
         db.refresh(office)
 
-    # 5) regra de owner (MVP): primeiro usuário do office vira owner
-    existing_owner = (
-        db.query(User.id)
-        .filter(User.office_id == office.id, User.is_owner.is_(True))
-        .first()
-    )
-    make_owner = existing_owner is None
-
-    # 6) cria/acha usuário no Juris
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
         user = User(
             email=email,
-            password=token_urlsafe(32),  # placeholder
+            password=token_urlsafe(32),
             office_id=office.id,
-            is_owner=make_owner,
+            is_owner=True,
         )
         db.add(user)
         db.commit()
         db.refresh(user)
     else:
-        if make_owner and not user.is_owner:
-            user.is_owner = True
-            db.add(user)
-            db.commit()
-            db.refresh(user)
+        office = db.query(Office).filter(Office.id == user.office_id).first()
+        if not office:
+            raise HTTPException(status_code=400, detail="Office not found for user")
 
-    # 7) salva/atualiza GoogleToken por office (drive/calendar)
     now = datetime.now(timezone.utc)
 
     gt = db.query(GoogleToken).filter(GoogleToken.office_id == office.id).first()
@@ -186,7 +173,6 @@ def google_callback(
         db.add(gt)
     else:
         gt.access_token = access_token
-        # não perde refresh_token antigo se o google não mandar um novo
         if refresh_token:
             gt.refresh_token = refresh_token
         gt.token_type = token_type
@@ -197,7 +183,6 @@ def google_callback(
 
     db.commit()
 
-    # 8) emite token do Juris e manda pro front
-    juris_token = _create_access_token(email)
+    juris_token = _create_access_token(user)
     redirect_to = f"{settings.FRONTEND_LOGIN_REDIRECT}?token={juris_token}"
     return RedirectResponse(redirect_to)

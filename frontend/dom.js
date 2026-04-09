@@ -4,106 +4,57 @@ function $(id) {
   return document.getElementById(id);
 }
 
-export function showBlockedOverlay(payload = {}) {
+function showBlockedOverlay(payload = []) {
   const overlay = $("lock-overlay");
   if (overlay) overlay.style.display = "flex";
-
-  const msg = $("lock-message");
-  if (msg) {
-    msg.innerText =
-      payload?.message ||
-      payload?.detail ||
-      "Escritório bloqueado: existe prazo crítico vencido não concluído.";
-  }
 
   const list = $("lock-deadlines");
   if (list) {
     list.innerHTML = "";
-    const overdue = payload?.overdue_critical || payload?.overdueCritical || [];
-    if (Array.isArray(overdue) && overdue.length) {
+    // Payload pode ser a lista de prazos direto
+    const overdue = Array.isArray(payload) ? payload : (payload?.overdue_critical || []);
+    if (overdue.length) {
       overdue.forEach((d) => {
         const li = document.createElement("li");
-        li.innerText = `#${d.id} — ${d.description} (vence: ${d.due_date || d.dueDate})`;
+        li.innerText = `#${d.id} — ${d.description} (vence: ${d.due_date})`;
         list.appendChild(li);
       });
     }
   }
+  localStorage.setItem("office_blocked", "true");
 }
 
-export function hideBlockedOverlay() {
+function hideBlockedOverlay() {
   const overlay = $("lock-overlay");
   if (overlay) overlay.style.display = "none";
+  localStorage.removeItem("office_blocked");
 }
 
-export function restoreBlockedOverlayFromStorage() {
-  const saved = localStorage.getItem("juris_block_info");
-  if (!saved) return false;
-
-  try {
-    const payload = JSON.parse(saved);
-    showBlockedOverlay(payload);
-    return true;
-  } catch {
-    return false;
+function restoreBlockedOverlayFromStorage() {
+  if (localStorage.getItem("office_blocked") === "true") {
+    showBlockedOverlay();
   }
 }
 
-export function clearBlockedOverlayStorage() {
-  localStorage.removeItem("juris_block_info");
-}
-
-/**
- * Statusbar do dashboard
- * Espera o shape do /system/status que você já usa:
- * { blocked: bool, counts: {...}, next_deadline?, overdue_critical? }
- */
-export function setStatusBar(status) {
+function setStatusBar(data) {
   const dot = $("status-dot");
   const title = $("status-title");
   const sub = $("status-sub");
 
-  const openTotal = $("st-open-total");
-  const openCritical = $("st-open-critical");
-  const overdueTotal = $("st-overdue-total");
-  const overdueCritical = $("st-overdue-critical");
-
-  const counts = status?.counts || {};
-
-  if (openTotal) openTotal.innerText = counts.open_total ?? 0;
-  if (openCritical) openCritical.innerText = counts.open_critical ?? 0;
-  if (overdueTotal) overdueTotal.innerText = counts.overdue_total ?? 0;
-  if (overdueCritical) overdueCritical.innerText = counts.overdue_critical ?? 0;
-
-  if (status?.blocked) {
-    if (dot) dot.className = "dot dot-red";
-    if (title) title.innerText = "Escritório BLOQUEADO";
-
-    const first = status?.overdue_critical?.[0];
-    if (sub) {
-      sub.innerText = first
-        ? `Motivo: prazo crítico vencido (#${first.id}) — ${first.due_date}`
-        : "Motivo: prazo crítico vencido.";
-    }
+  if (data.blocked) {
+    if (dot) { dot.className = "badge"; dot.style.background = "var(--danger)"; }
+    if (title) title.innerText = "Escritório Bloqueado";
+    if (sub) sub.innerText = "Regularize os prazos críticos.";
   } else {
-    if (dot) dot.className = "dot dot-green";
-    if (title) title.innerText = "Escritório operacional";
-
-    const next = status?.next_deadline;
-    if (sub) {
-      sub.innerText = next
-        ? `Próximo prazo: #${next.id} — ${next.due_date}${next.is_critical ? " (crítico)" : ""}`
-        : "Sem prazos pendentes.";
-    }
+    if (dot) { dot.className = "badge badge-active"; dot.style.background = "var(--accent)"; }
+    if (title) title.innerText = "Escritório Saudável";
+    if (sub) sub.innerText = "Todos os prazos críticos estão em dia.";
   }
+
+  if ($("st-open-total")) $("st-open-total").innerText = data.counts.open_total;
+  if ($("st-overdue-total")) $("st-overdue-total").innerText = data.counts.overdue_total;
 }
 
-/**
- * Inicializa listeners globais
- * - ao receber 423 no http.js, ele dá dispatch "juris:blocked"
- */
-export function initDomGuards() {
-  window.addEventListener("juris:blocked", (ev) => {
-    const payload = ev?.detail || {};
-    showBlockedOverlay(payload);
-  });
+function initDomGuards() {
+  // Inicialização de eventos globais se necessário
 }

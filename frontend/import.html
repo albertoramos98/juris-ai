@@ -3,127 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Importação CSV - Juris AI</title>
+  <title>Importar - Juris AI</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
+
 <body>
-
-<div class="app-shell">
-
-  <aside class="sidebar">
-    <div class="brand">
-      <div>
-        <strong>Juris AI</strong><br/>
-        <span>Importação</span>
-      </div>
-      <span style="width:10px;height:10px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 4px rgba(79,140,255,.18)"></span>
-    </div>
-
-    <nav class="nav">
-      <a href="dashboard.html">🏠 Dashboard</a>
-      <a href="documents.html">📁 Documentos</a>
-      <a href="process.html">📌 Processos</a>
-      <a href="attacks.html">⚔️ Ataque & Defesa</a>
-      <a class="active" href="import.html">⬆️ Import CSV</a>
-
-      <div class="hint">
-        Importação em massa para demonstrar “produto pronto”.
-      </div>
-    </nav>
-  </aside>
-
-  <main class="main">
-
-    <header class="topbar">
-      <h1>Importação CSV (Processos)</h1>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <button class="secondary" id="btnReset">Limpar</button>
-        <button class="secondary" id="btnRefresh">Recarregar</button>
-        <button id="btnLogout">Sair</button>
-      </div>
-    </header>
-
-    <section class="statusbar" style="margin-top:0;">
-      <div class="status-left">
-        <span class="dot dot-green" id="impDot"></span>
-        <strong id="impTitle">Import CSV</strong>
-        <span class="muted" id="impSub">Envie um CSV para pré-visualizar.</span>
+  <div class="app-shell">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon"><i class="fas fa-balance-scale"></i></div>
+        <h2>Juris AI</h2>
       </div>
 
-      <div class="status-right">
-        <span class="pill">Linhas: <b id="stRows">0</b></span>
-        <span class="pill">Válidas: <b id="stValid">0</b></span>
-        <span class="pill danger">Erros: <b id="stErr">0</b></span>
-      </div>
-    </section>
+      <nav class="nav">
+        <a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a>
+        <a href="process.html"><i class="fas fa-gavel"></i> <span>Processos</span></a>
+        <a href="documents.html"><i class="fas fa-folder-open"></i> <span>Documentos</span></a>
+        <a href="attacks.html"><i class="fas fa-shield-halved"></i> <span>Ataque & Defesa</span></a>
+        <a href="meeting.html"><i class="fas fa-microphone"></i> <span>Reuniões</span></a>
+        <a class="active" href="import.html"><i class="fas fa-file-import"></i> <span>Importar</span></a>
+        <a href="team.html"><i class="fas fa-users"></i> <span>Equipe</span></a>
+      </nav>
+    </aside>
 
-    <section class="grid">
-      <div class="box">
-        <h2>1) Enviar CSV</h2>
-        <div style="margin-top:10px;">
-  <a
-    href="templates/processes_template.csv"
-    download
-    class="secondary"
-    style="display:inline-block;"
-  >
-    ⬇️ Baixar modelo CSV (processos) 
-  </a>
-</div>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>Importação em Lote</h1>
+          <p style="color: var(--text-secondary); font-size: 14px;">Migre seus processos e clientes rapidamente através de planilhas CSV.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="secondary" type="button" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+      </header>
 
-
-        <div class="form-box">
-          <h3>Arquivo</h3>
-          <input type="file" id="csvFile" accept=".csv" />
-          <p class="muted" style="margin-top:8px;">
-            Colunas obrigatórias: <b>number, client_name, court, type</b> (status é opcional)
-          </p>
-
-          <div style="display:flex; gap:10px; margin-top:10px;">
-            <button id="btnPreview" style="flex:1;">Pré-visualizar</button>
-            <button id="btnCommit" class="secondary" style="flex:1;" disabled>Importar</button>
+      <div style="max-width: 600px; margin: 0 auto;">
+        
+        <div class="panel">
+          <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px;">
+            <div style="font-size: 32px; color: var(--primary);"><i class="fas fa-file-csv"></i></div>
+            <div>
+              <h2 style="margin: 0 0 8px 0; font-size: 18px;">Como importar dados?</h2>
+              <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
+                Faça o download do nosso template oficial. Preencha as colunas com os dados dos seus clientes e processos (nome, email, número do processo, tribunal) e faça o upload abaixo.
+              </p>
+            </div>
           </div>
 
-          <div style="display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap;">
-            <label class="muted" style="display:flex; gap:8px; align-items:center;">
-              <input type="radio" name="mode" value="create_only" checked />
-              create_only
-            </label>
-            <label class="muted" style="display:flex; gap:8px; align-items:center;">
-              <input type="radio" name="mode" value="upsert" />
-              upsert
-            </label>
-            <span class="muted" id="modeHint">create_only: se já existir, vira erro.</span>
+          <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1); margin-bottom: 24px; text-align: center;">
+            <p style="margin: 0 0 16px 0; font-size: 14px; color: var(--text-muted);">Baixe a planilha modelo (Template)</p>
+            <button class="secondary" id="btnDownloadTemplate"><i class="fas fa-download"></i> Baixar Template.csv</button>
           </div>
+
+          <div class="form-group">
+            <label>Selecione seu arquivo CSV preenchido</label>
+            <input type="file" id="csvFile" accept=".csv" style="padding: 12px;" />
+          </div>
+
+          <button id="btnUpload" class="primary" style="width: 100%; justify-content: center; font-size: 16px; padding: 14px;">
+            <i class="fas fa-cloud-upload-alt"></i> Processar Importação
+          </button>
+          
+          <div id="status" style="margin-top: 16px; font-weight: 500; text-align: center;"></div>
         </div>
 
-        <div class="form-box">
-          <h3>Relatório</h3>
-          <div id="reportBox">
-            <p class="muted">Sem relatório ainda.</p>
-          </div>
-        </div>
       </div>
+    </main>
+  </div>
 
-      <div class="box">
-        <h2>2) Preview</h2>
-
-        <div id="previewBox">
-          <p class="muted">Faça o preview para ver as linhas e erros.</p>
-        </div>
-
-        <div style="margin-top:12px;">
-          <h3>Erros</h3>
-          <div id="errorsBox">
-            <p class="muted">Nenhum erro exibido.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <script type="module" src="import.js"></script>
-  </main>
-</div>
-
+  <script src="config.js"></script>
+  <script src="storage.js"></script>
+  <script src="auth.js"></script>
+  <script src="http.js"></script>
+  <script src="guard.js"></script>
+  <script src="import.js"></script>
 </body>
 </html>

@@ -151,3 +151,18 @@ def upload_file(
         _raise_drive_error(r, "Drive upload_file failed")
 
     return r.json()
+
+def download_file(access_token: str, file_id: str) -> bytes:
+    """
+    Baixa o conteúdo original do arquivo no Drive (alt=media).
+    """
+    r = requests.get(
+        f"{DRIVE_API}/files/{file_id}",
+        headers=_auth_headers(access_token),
+        params={"alt": "media"},
+        timeout=60,
+    )
+    if r.status_code != 200:
+        _raise_drive_error(r, "Drive download_file failed")
+    return r.content
+

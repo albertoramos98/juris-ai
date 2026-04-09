@@ -5,104 +5,233 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Processos - Juris AI</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
+
 <body>
-
-<div class="app-shell">
-
-  <aside class="sidebar">
-    <div class="brand">
-      <div>
-        <strong>Juris AI</strong><br/>
-        <span>Processos</span>
+  <div class="app-shell">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon"><i class="fas fa-balance-scale"></i></div>
+        <h2>Juris AI</h2>
       </div>
-      <span style="width:10px;height:10px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 4px rgba(79,140,255,.18)"></span>
-    </div>
 
-    <nav class="nav">
-      <a href="dashboard.html">🏠 Dashboard</a>
-      <a href="documents.html">📁 Documentos</a>
-      <a class="active" href="process.html">📌 Processos</a>
-      <a href="attacks.html">⚔️ Ataque & Defesa</a>
-      <a href="import.html">⬆️ Import CSV</a>
+      <nav class="nav">
+        <a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a>
+        <a class="active" href="process.html"><i class="fas fa-gavel"></i> <span>Processos</span></a>
+        <a href="documents.html"><i class="fas fa-folder-open"></i> <span>Documentos</span></a>
+        <a href="styles.html"><i class="fas fa-pen-nib"></i> <span>Treinar Estilo</span></a>
+        <a href="knowledge.html"><i class="fas fa-book"></i> <span>Biblioteca Jurídica</span></a>
+        <a href="attacks.html"><i class="fas fa-shield-halved"></i> <span>Ataque & Defesa</span></a>
+        <a href="meeting.html"><i class="fas fa-microphone"></i> <span>Reuniões</span></a>
+        <a href="import.html"><i class="fas fa-file-import"></i> <span>Importar</span></a>
+        <a href="team.html"><i class="fas fa-users"></i> <span>Equipe</span></a>
+      </nav>
+    </aside>
 
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>Gestão de Processos</h1>
+          <p style="color: var(--text-secondary); font-size: 14px;">Administre prazos, documentos e fluxo de e-mails de cada cliente.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="primary" id="btnOpenAi" type="button"><i class="fas fa-brain"></i> Juris IA (Cérebro)</button>
+          <button class="secondary" id="btnRefresh" type="button"><i class="fas fa-sync-alt"></i> Atualizar</button>
+        </div>
+      </header>
 
-      <div class="hint">
-        Aqui é a tela de “detalhe”. Prazos + docs por processo.
-      </div>
-    </nav>
-  </aside>
+      <div style="display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start;">
+        
+        <!-- COLUNA ESQUERDA: AÇÕES E SELEÇÃO -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+          
+          <!-- SELECIONAR PROCESSO -->
+          <div class="panel">
+            <h3 style="font-size: 14px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">
+              <i class="fas fa-search"></i> Selecionar Processo
+            </h3>
+            <select id="processSelect" style="margin-bottom: 12px; font-weight: 500;">
+              <option value="">Carregando processos...</option>
+            </select>
+            <div id="processMeta" style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; background: rgba(0,0,0,0.1); padding: 12px; border-radius: 8px;">
+              Selecione um processo para visualizar os detalhes.
+            </div>
+          </div>
 
-  <main class="main">
+          <!-- CRIAR PRAZO -->
+          <div class="panel">
+            <h3 style="font-size: 14px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">
+              <i class="fas fa-clock"></i> Novo Prazo
+            </h3>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <input id="deadline-desc" placeholder="Ex: Protocolar Contestação" />
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <input id="deadline-date" type="date" />
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <input id="deadline-resp" placeholder="Responsável (ex: Adv. Master)" />
+            </div>
+            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; background: rgba(245, 158, 11, 0.1); padding: 10px; border-radius: 8px; color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.2); cursor: pointer;">
+              <input id="deadline-critical" type="checkbox" style="width: auto; margin: 0;" />
+              <span style="font-weight: 600;">Marcar como Prazo Crítico</span>
+            </label>
+            <button id="btnCreateDeadline" class="primary" style="width: 100%; justify-content: center;" disabled>Adicionar Prazo</button>
+          </div>
 
-    <header class="topbar">
-      <h1>Processos</h1>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <button class="secondary" id="btnRefresh">Recarregar</button>
-        <button onclick="logout()">Sair</button>
-      </div>
-    </header>
-
-    <section class="grid">
-
-      <div class="box">
-        <h2>Selecionar</h2>
-
-        <div class="form-box">
-          <h3>Processo</h3>
-          <select id="processSelect">
-            <option value="">Carregando...</option>
-          </select>
-          <div class="muted" style="margin-top:8px;" id="processMeta"></div>
+          <!-- UPLOAD -->
+          <div class="panel">
+            <h3 style="font-size: 14px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">
+              <i class="fas fa-upload"></i> Anexar Documento
+            </h3>
+            <select id="docCategory" style="margin-bottom: 12px;">
+              <option value="inicial">Petição Inicial</option>
+              <option value="procuracao">Procuração</option>
+              <option value="contrato">Contrato/Honorários</option>
+              <option value="docs_cliente">Documentos do Cliente</option>
+              <option value="recurso">Recurso Ordinário (RO)</option>
+              <option value="contrarrazões">Contrarrazões</option>
+              <option value="decisão">Sentença/Acórdão</option>
+              <option value="cálculos">Memorial de Cálculo</option>
+              <option value="outros">Outros Documentos</option>
+            </select>
+            <input type="file" id="docFile" style="margin-bottom: 16px; font-size: 13px; padding: 8px;" />
+            <button id="btnUploadDoc" class="secondary" style="width: 100%; justify-content: center;" disabled>Fazer Upload</button>
+          </div>
+          
         </div>
 
-        <div class="form-box">
-          <h3>Criar prazo nesse processo</h3>
-          <input id="deadline-desc" placeholder="Descrição" />
-          <input id="deadline-date" type="date" />
-          <input id="deadline-resp" placeholder="Responsável" />
+        <!-- COLUNA DIREITA: DETALHES E ABAS -->
+        <div class="panel" style="min-height: calc(100vh - 140px);">
+          
+          <div class="tabs" role="tablist">
+            <button class="tab-btn is-active" data-tab="tab-timeline" type="button"><i class="fas fa-history"></i> Histórico</button>
+            <button class="tab-btn" data-tab="tab-deadlines" type="button"><i class="fas fa-calendar-alt"></i> Prazos</button>
+            <button class="tab-btn" data-tab="tab-docs" type="button"><i class="fas fa-file-pdf"></i> Documentos</button>
+            <button class="tab-btn" data-tab="tab-automation" type="button"><i class="fas fa-robot"></i> Automação RAG</button>
+          </div>
 
-          <label class="checkbox">
-            <input id="deadline-critical" type="checkbox" />
-            Prazo crítico
-          </label>
+          <!-- TIMELINE -->
+          <div id="tab-timeline" class="tab-panel is-active" role="tabpanel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <h3 style="font-size: 16px; margin: 0;">Histórico do Processo</h3>
+              <button id="btnRefreshTimeline" class="secondary btn-small" type="button"><i class="fas fa-sync"></i> Atualizar</button>
+            </div>
+            <div id="timelineList" style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 16px;">
+              <p style="color: var(--text-muted); text-align: center; margin: 20px 0;">Selecione um processo para ver a linha do tempo.</p>
+            </div>
+          </div>
 
-          <button id="btnCreateDeadline" disabled>Criar prazo</button>
-        </div>
+          <!-- PRAZOS -->
+          <div id="tab-deadlines" class="tab-panel" role="tabpanel" style="display: none;">
+            <h3 style="font-size: 16px; margin: 0 0 24px 0;">Controle de Prazos</h3>
+            <div id="deadlinesList">
+              <p style="color: var(--text-muted); text-align: center; margin: 20px 0;">Selecione um processo para ver os prazos.</p>
+            </div>
+          </div>
 
-        <div class="form-box">
-          <h3>Upload de doc nesse processo</h3>
-          <select id="docCategory">
-            <option value="inicial">Inicial</option>
-            <option value="procuracao">Procuração</option>
-            <option value="contrato">Contrato</option>
-            <option value="docs_cliente">Docs do Cliente</option>
-            <option value="outros">Outros</option>
-          </select>
-          <input type="file" id="docFile" />
-          <button id="btnUploadDoc" disabled>Upload</button>
+          <!-- DOCS -->
+          <div id="tab-docs" class="tab-panel" role="tabpanel" style="display: none;">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 style="font-size: 16px; margin: 0;">Documentação do Processo</h3>
+                <span id="docProgressBadge" class="badge badge-pending">Pendente</span>
+             </div>
+
+             <!-- CHECKLIST VISUAL -->
+             <div id="documentChecklist" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 32px; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid var(--card-border);">
+                <div class="checklist-item" data-category="docs_cliente" style="display: flex; align-items: center; gap: 10px; color: var(--text-secondary);">
+                    <i class="far fa-circle"></i> <span>RG / CPF</span>
+                </div>
+                <div class="checklist-item" data-category="procuracao" style="display: flex; align-items: center; gap: 10px; color: var(--text-secondary);">
+                    <i class="far fa-circle"></i> <span>Procuração</span>
+                </div>
+                <div class="checklist-item" data-category="contrato" style="display: flex; align-items: center; gap: 10px; color: var(--text-secondary);">
+                    <i class="far fa-circle"></i> <span>Contrato Honorários</span>
+                </div>
+                <div class="checklist-item" data-category="inicial" style="display: flex; align-items: center; gap: 10px; color: var(--text-secondary);">
+                    <i class="far fa-circle"></i> <span>Petição Base / Fatos</span>
+                </div>
+             </div>
+
+             <div id="docsList">
+              <p style="color: var(--text-muted); text-align: center; margin: 20px 0;">Selecione um processo para ver os arquivos.</p>
+            </div>
+          </div>
+
+          <!-- AUTOMAÇÃO -->
+          <div id="tab-automation" class="tab-panel" role="tabpanel" style="display: none;">
+             <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+              <h3 style="font-size: 16px; margin: 0 0 8px 0; color: var(--primary);"><i class="fas fa-brain"></i> Indexação RAG (Treinar Cérebro)</h3>
+              <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
+                Extrai o texto de todos os documentos anexados e treina a IA especificamente para este caso.
+              </p>
+              <button id="btnIndexAI" class="primary" style="width: 200px; justify-content: center;" disabled><i class="fas fa-sync"></i> Indexar para IA</button>
+              <div id="indexStatus" style="margin-top: 12px; font-size: 12px; color: var(--text-muted);"></div>
+            </div>
+
+             <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 24px;">
+              <h3 style="font-size: 16px; margin: 0 0 8px 0; color: var(--primary);"><i class="fas fa-envelope"></i> Cobrança Automática</h3>
+              <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
+                O Juris IA enviará e-mails recorrentes para o cliente até que os documentos necessários sejam anexados ao processo.
+              </p>
+
+              <div id="emailFlowStatus" style="font-size: 14px; font-weight: 500; margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                Status: Selecione um processo.
+              </div>
+
+              <div style="display: flex; gap: 12px;">
+                <button id="btnStartEmailFlow" class="primary" type="button" disabled><i class="fas fa-play"></i> Iniciar Cobrança</button>
+                <button id="btnPauseEmailFlow" class="secondary" type="button" disabled><i class="fas fa-pause"></i> Pausar</button>
+                <button id="btnStopEmailFlow" class="danger" type="button" disabled><i class="fas fa-stop"></i> Encerrar</button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <div class="box">
-        <h2>Prazos do processo</h2>
-        <div id="deadlinesList" style="margin-top:12px;">
-          <p class="muted">Selecione um processo.</p>
-        </div>
-      </div>
+      <script src="config.js"></script>
+      <script src="storage.js"></script>
+      <script src="auth.js"></script>
+      <script src="http.js"></script>
+      <script src="process.js"></script>
+      <script>
+        (function () {
+          const btn = document.getElementById("btnOpenAi");
+          if (!btn) return;
 
-      <div class="box">
-        <h2>Docs do processo</h2>
-        <div id="docsList" style="margin-top:12px;">
-          <p class="muted">Selecione um processo.</p>
-        </div>
-      </div>
+          btn.addEventListener("click", () => {
+            const pid =
+              Number(new URL(window.location.href).searchParams.get("process_id") || 0) ||
+              Number(localStorage.getItem("selected_process_id") || 0) ||
+              Number(document.getElementById("processSelect")?.value || 0);
 
-    </section>
+            if (!pid) {
+              alert("Por favor, selecione um processo antes de abrir a IA.");
+              return;
+            }
+            window.location.href = `process-ai.html?process_id=${pid}`;
+          });
 
-    <script type="module" src="process.js"></script>
-  </main>
-</div>
+          // Lógica simples de abas
+          const tabs = document.querySelectorAll('.tab-btn');
+          const panels = document.querySelectorAll('.tab-panel');
 
+          tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+              tabs.forEach(t => t.classList.remove('is-active'));
+              panels.forEach(p => p.style.display = 'none');
+              
+              tab.classList.add('is-active');
+              document.getElementById(tab.dataset.tab).style.display = 'block';
+            });
+          });
+        })();
+      </script>
+    </main>
+  </div>
 </body>
 </html>

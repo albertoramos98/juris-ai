@@ -1,6 +1,6 @@
-import { API } from "./config.js";
+// Removido import para usar global do config.js
 
-export async function login(email, password) {
+async function login(email, password) {
   const body = new URLSearchParams();
   body.set("username", email);
   body.set("password", password);
@@ -18,6 +18,10 @@ export async function login(email, password) {
   return data;
 }
 
-export function logout() {
+function logout() {
   localStorage.removeItem("token");
+  window.location.href = "index.html";
 }
+
+// Expõe globalmente
+window.logout = logout;

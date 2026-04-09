@@ -140,7 +140,7 @@ def commit_rows(
                     office_id=office_id,
                 )
                 db.add(client)
-                db.flush()  # pega ID sem commit
+                db.flush()  # pega ID sem commit ainda
 
             process = (
                 db.query(Process)
@@ -157,6 +157,7 @@ def commit_rows(
                     process.type = row["type"]
                     process.status = row.get("status") or process.status
                     process.client_id = client.id
+                    db.commit() # Commit individual row
                     updated += 1
                 else:
                     failed += 1
@@ -176,6 +177,7 @@ def commit_rows(
                     office_id=office_id,
                 )
                 db.add(process)
+                db.commit() # Commit individual row
                 created += 1
 
         except Exception as e:
@@ -187,5 +189,4 @@ def commit_rows(
                 "message": str(e),
             })
 
-    db.commit()
     return created, updated, failed, errors

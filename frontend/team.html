@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Equipe - Juris AI</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+  <div class="app-shell">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon"><i class="fas fa-balance-scale"></i></div>
+        <h2>Juris AI</h2>
+      </div>
+
+      <nav class="nav">
+        <a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a>
+        <a href="process.html"><i class="fas fa-gavel"></i> <span>Processos</span></a>
+        <a href="documents.html"><i class="fas fa-folder-open"></i> <span>Documentos</span></a>
+        <a href="attacks.html"><i class="fas fa-shield-halved"></i> <span>Ataque & Defesa</span></a>
+        <a href="meeting.html"><i class="fas fa-microphone"></i> <span>Reuniões</span></a>
+        <a href="import.html"><i class="fas fa-file-import"></i> <span>Importar</span></a>
+        <a class="active" href="team.html"><i class="fas fa-users"></i> <span>Equipe</span></a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>Gestão de Equipe</h1>
+          <p style="color: var(--text-secondary); font-size: 14px;">Gerencie os acessos, roles e permissões dos membros do seu escritório.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="secondary" id="btnRefresh" type="button"><i class="fas fa-sync-alt"></i> Recarregar</button>
+          <button class="secondary" type="button" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+      </header>
+
+      <div style="display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start;">
+        
+        <!-- ESQUERDA: ADICIONAR USUÁRIO -->
+        <div class="panel">
+          <h3 class="panel-title"><i class="fas fa-user-plus"></i> Novo Membro</h3>
+          <div class="form-group">
+            <input id="newUserName" placeholder="Nome Completo" />
+          </div>
+          <div class="form-group">
+            <input id="newUserEmail" type="email" placeholder="email@escritorio.com" />
+          </div>
+          <div class="form-group">
+            <input id="newUserPass" type="password" placeholder="Senha Temporária" />
+          </div>
+          <div class="form-group">
+            <label>Nível de Acesso (Role)</label>
+            <select id="newUserRole">
+              <option value="member">Membro (Padrão)</option>
+              <option value="owner">Owner (Administrador)</option>
+            </select>
+          </div>
+          <button id="btnCreateUser" class="primary" style="width: 100%; justify-content: center;">Adicionar à Equipe</button>
+        </div>
+
+        <!-- DIREITA: LISTA DE USUÁRIOS -->
+        <div class="panel">
+          <h3 class="panel-title"><i class="fas fa-users"></i> Membros Ativos</h3>
+          <div style="overflow-x: auto;">
+            <table class="data-table" id="teamTable">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>Cargo</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="teamTbody">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">Carregando equipe...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="storage.js"></script>
+  <script src="auth.js"></script>
+  <script src="http.js"></script>
+  <script src="guard.js"></script>
+  <script src="team.js"></script>
+</body>
+</html>

@@ -7,14 +7,18 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import get_current_user
 from app.core.database import get_db
 from app.models.deadline import Deadline
+from app.models.process import Process
+from app.models.process_event import ProcessEvent
 from app.models.user import User
 from app.permissions.dependencies import ensure_office_not_blocked
 from app.services.google_oauth import get_valid_access_token
+from app.schemas.deadline import DeadlineCreate, DeadlineResponse
+from app.services.process_event_service import create_process_event
 
 router = APIRouter(prefix="/deadlines", tags=["Deadlines"])
 
 
-@router.get("/")
+@router.get("/", response_model=list[DeadlineResponse])
 def list_deadlines(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -27,44 +31,27 @@ def list_deadlines(
     )
 
 
-@router.post("/", dependencies=[Depends(ensure_office_not_blocked)])
+@router.post("/", response_model=DeadlineResponse, dependencies=[Depends(ensure_office_not_blocked)])
 def create_deadline(
-    data: dict,
+    data: DeadlineCreate,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    description = (data.get("description") or "").strip()
-    due_date_raw = data.get("due_date")
-    responsible = (data.get("responsible") or "").strip()
-    process_id = data.get("process_id")
-    is_critical = bool(data.get("is_critical"))
-
-    if not description or not due_date_raw or not responsible or not process_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing required fields.",
-        )
-
-    # ✅ converte string -> date pro SQLite
-    try:
-        if isinstance(due_date_raw, date):
-            due_date = due_date_raw
-        elif isinstance(due_date_raw, str):
-            due_date = date.fromisoformat(due_date_raw)  # "YYYY-MM-DD"
-        else:
-            raise ValueError("Invalid due_date type")
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="due_date must be in YYYY-MM-DD format.",
-        )
+    # ✅ valida se o processo pertence ao office (evita prazo em processo de outro tenant)
+    proc = (
+        db.query(Process)
+        .filter(Process.id == data.process_id, Process.office_id == user.office_id)
+        .first()
+    )
+    if not proc:
+        raise HTTPException(status_code=404, detail="Process not found.")
 
     deadline = Deadline(
-        description=description,
-        due_date=due_date,  # ✅ agora é date
-        responsible=responsible,
-        process_id=process_id,
-        is_critical=is_critical,
+        description=data.description,
+        due_date=data.due_date,
+        responsible=data.responsible,
+        process_id=data.process_id,
+        is_critical=data.is_critical,
         office_id=user.office_id,
         completed=False,
         status="pending",
@@ -74,8 +61,46 @@ def create_deadline(
     db.commit()
     db.refresh(deadline)
 
-    return deadline
+    # ✅ GOOGLE CALENDAR INTEGRATION
+    try:
+        token = get_valid_access_token(db, user.office_id)
+        
+        # Agendamento padrão para as 09:00 do dia do vencimento
+        start_time = f"{deadline.due_date.isoformat()}T09:00:00-03:00"
+        end_time = f"{deadline.due_date.isoformat()}T10:00:00-03:00"
+        
+        cal_payload = {
+            "summary": f"PRAZO JURÍDICO: {deadline.description}",
+            "description": f"Prazo criado via Juris IA\nProcesso ID: {deadline.process_id}\nResponsável: {deadline.responsible}",
+            "start": {"dateTime": start_time},
+            "end": {"dateTime": end_time},
+            "reminders": {"useDefault": True}
+        }
+        
+        requests.post(
+            "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            json=cal_payload,
+            timeout=10
+        )
+    except Exception as e:
+        print(f"Falha ao agendar no Google Calendar: {e}")
 
+    # ✅ TIMELINE EVENT: deadline_created
+    try:
+        create_process_event(
+            db=db,
+            office_id=user.office_id,
+            process_id=deadline.process_id,
+            type="deadline_created",
+            title="Prazo criado",
+            description=f"{deadline.description} — vencimento em {deadline.due_date.isoformat()} | Responsável: {deadline.responsible} | Crítico: {'SIM' if deadline.is_critical else 'não'}",
+        )
+    except Exception:
+        # não quebra a criação do prazo se event falhar
+        pass
+
+    return deadline
 
 
 @router.post("/{deadline_id}/complete")
@@ -109,6 +134,19 @@ def complete_deadline(
 
     db.add(d)
     db.commit()
+
+    # ✅ TIMELINE EVENT: deadline_completed
+    try:
+        create_process_event(
+            db=db,
+            office_id=user.office_id,
+            process_id=d.process_id,
+            type="deadline_completed",
+            title="Prazo concluído",
+            description=f"{d.description} — concluído por user_id={user.id}",
+        )
+    except Exception:
+        pass
 
     return {"ok": True, "deadline_id": d.id}
 
@@ -181,6 +219,19 @@ def sync_deadline_to_calendar(
     if html_link and organizer_email:
         sep = "&" if "?" in html_link else "?"
         open_link = f"{html_link}{sep}authuser={organizer_email}"
+
+    # ✅ TIMELINE EVENT: deadline_synced_calendar
+    try:
+        create_process_event(
+            db=db,
+            office_id=user.office_id,
+            process_id=d.process_id,
+            type="deadline_synced_calendar",
+            title="Prazo sincronizado no Google Calendar",
+            description=f"Prazo #{d.id} sincronizado. Event ID: {ev.get('id')} | Link: {html_link}",
+        )
+    except Exception:
+        pass
 
     return {
         "ok": True,

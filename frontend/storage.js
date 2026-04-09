@@ -1,13 +1,13 @@
 const TOKEN_KEY = "juris_token";
 
-export function setToken(token) {
+function setToken(token) {
   localStorage.setItem(TOKEN_KEY, token);
 }
 
-export function getToken() {
+function getToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
 
-export function clearToken() {
+function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }

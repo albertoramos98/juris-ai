@@ -1,267 +1,266 @@
-// attacks.js
-import { API } from "./config.js";
-import { logout as doLogout } from "./auth.js";
+// Removidos imports para compatibilidade global
 
-function getToken(){ return localStorage.getItem("token"); }
-function authHeaders(extra = {}){
+function getToken() { return localStorage.getItem("token"); }
+
+function authHeaders(extra = {}) {
   const t = getToken();
-  return { ...(t ? { Authorization:`Bearer ${t}` } : {}), ...extra };
+  return { ...(t ? { Authorization: `Bearer ${t}` } : {}), ...extra };
 }
-async function readError(res){
-  try{
-    const ct = res.headers.get("content-type") || "";
-    if (ct.includes("application/json")){
-      const d = await res.json();
-      return d?.detail || JSON.stringify(d);
-    }
-    return await res.text();
-  }catch{ return "Erro desconhecido"; }
-}
-async function apiFetch(path, options = {}){
-  let res;
-  try{
-    res = await fetch(`${API}${path}`, { ...options, headers: authHeaders(options.headers || {}) });
-  }catch(e){
-    console.error(e);
-    alert("Falha de rede. Confere o backend.");
-    return null;
+
+/* =====================
+   CORE STATE
+===================== */
+let currentComposition = null;
+
+/* =====================
+   CORE FUNCTIONS
+===================== */
+async function loadProcesses() {
+  const select = document.getElementById("processSelect");
+  try {
+    const res = await fetch(`${API}/processes`, { headers: authHeaders() });
+    const data = await res.json();
+    select.innerHTML = '<option value="">Selecione o processo...</option>';
+    data.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.client_name;
+      select.appendChild(opt);
+    });
+  } catch (e) {
+    console.error("Erro ao carregar processos:", e);
   }
-  if (res.status === 401){
-    doLogout();
-    window.location.href="index.html";
-    return null;
+}
+
+async function generateStrategy() {
+  const processId = document.getElementById("processSelect").value;
+  const mode = document.getElementById("modeSelect").value;
+  const style = document.getElementById("styleSelect").value;
+  const notes = document.getElementById("notesInput").value;
+  const hasAudio = document.getElementById("hasAudio").checked;
+  const audioNotes = document.getElementById("audioNotes").value;
+  const calculationValue = document.getElementById("calculationValue").value;
+
+  if (!processId) return alert("Selecione um processo.");
+
+  document.getElementById("emptyBox").style.display = "none";
+  document.getElementById("resultBox").style.display = "none";
+  document.getElementById("loadingBox").style.display = "block";
+
+  try {
+    const res = await fetch(`${API}/rag/compose`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({
+        process_id: processId,
+        mode: mode,
+        style: style,
+        notes: notes,
+        has_audio: hasAudio,
+        audio_notes: audioNotes,
+        calculation_value: calculationValue
+      })
+    });
+    
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Erro na geração.");
+
+    currentComposition = data.composition;
+    renderResult(data);
+  } catch (e) {
+    alert(e.message);
+    document.getElementById("emptyBox").style.display = "block";
+  } finally {
+    document.getElementById("loadingBox").style.display = "none";
   }
-  if (res.status === 423){
-    const data = await res.json().catch(()=> ({}));
-    localStorage.setItem("juris_block_info", JSON.stringify(data.detail || data));
-    window.location.href="dashboard.html";
-    return null;
-  }
-  return res;
 }
 
-window.logout = function(){
-  doLogout();
-  window.location.href="index.html";
-};
+function renderResult(data) {
+  const resultBox = document.getElementById("resultBox");
+  const summary = document.getElementById("resultSummary");
+  const sections = document.getElementById("resultSections");
+  const sources = document.getElementById("resultSources");
 
-const el = {
-  processSelect: document.getElementById("processSelect"),
-  thesis: document.getElementById("thesis"),
-  goal: document.getElementById("goal"),
-  risk: document.getElementById("risk"),
-  refDocs: document.getElementById("refDocs"),
-  template: document.getElementById("template"),
-  draft: document.getElementById("draft"),
-  status: document.getElementById("status"),
-
-  btnNew: document.getElementById("btnNew"),
-  btnSave: document.getElementById("btnSave"),
-  btnCopy: document.getElementById("btnCopy"),
-  btnExport: document.getElementById("btnExport"),
-};
-
-let processes = [];
-let selectedId = null;
-
-// ===== helpers =====
-function escapeHtml(str){
-  return String(str ?? "").replace(/[&<>"']/g, (s)=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[s]));
-}
-
-function setStatus(msg){
-  if (el.status) el.status.innerText = msg || "";
-}
-
-// storage local (até ter API)
-function key(){
-  return selectedId ? `juris_attackdef_${selectedId}` : null;
-}
-
-function loadLocal(){
-  const k = key();
-  if (!k) return;
-  const raw = localStorage.getItem(k);
-  if (!raw) return;
-  try{
-    const d = JSON.parse(raw);
-    el.thesis.value = d.thesis || "";
-    el.goal.value = d.goal || "";
-    el.risk.value = d.risk || "";
-    el.refDocs.value = d.refDocs || "";
-    el.template.value = d.template || "contestacao";
-    el.draft.value = d.draft || "";
-    setStatus("Carregado do localStorage ✅");
-  }catch{}
-}
-
-function saveLocal(){
-  const k = key();
-  if (!k) return;
-  const payload = {
-    thesis: el.thesis.value,
-    goal: el.goal.value,
-    risk: el.risk.value,
-    refDocs: el.refDocs.value,
-    template: el.template.value,
-    draft: el.draft.value,
-    updated_at: new Date().toISOString(),
-  };
-  localStorage.setItem(k, JSON.stringify(payload));
-  setStatus("Salvo localmente ✅");
-}
-
-function clearForm(){
-  el.thesis.value = "";
-  el.goal.value = "";
-  el.risk.value = "";
-  el.refDocs.value = "";
-  el.template.value = "contestacao";
-  el.draft.value = "";
-}
-
-// ===== docs integration =====
-async function loadDocsForProcess(pid){
-  const res = await apiFetch(`/processes/${pid}/documents`);
-  if (!res) return [];
-  if (!res.ok){
-    // não mata a page por causa disso, só avisa
-    console.warn("Falha ao carregar docs:", await readError(res));
-    return [];
-  }
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
-}
-
-function applyDocsToRefDocs(docs){
-  // Se refDocs for textarea, dá pra listar multi-linha.
-  // Se for input, vamos resumir e deixar um formato “copiável”.
-  if (!docs.length){
-    // só não sobrescreve se o usuário já digitou algo
-    if (!el.refDocs.value) el.refDocs.value = "";
-    return;
+  resultBox.style.display = "block";
+  
+  // Garantir que summary seja string
+  const comp = data.composition || {};
+  summary.innerText = typeof comp.summary === 'string' ? comp.summary : (comp.summary?.text || "Análise Concluída.");
+  
+  sections.innerHTML = "";
+  
+  // Se houver texto completo, mostramos como destaque
+  if (comp.full_text) {
+      const div = document.createElement("div");
+      div.className = "alert";
+      div.style.background = "rgba(59, 130, 246, 0.05)";
+      div.style.borderColor = "var(--primary)";
+      div.innerHTML = `<h4 style="color:var(--primary); margin-bottom:8px;">MINUTA DA PEÇA</h4><p style="font-size:14px; line-height:1.6; white-space: pre-wrap;">${comp.full_text}</p>`;
+      sections.appendChild(div);
   }
 
-  const lines = docs.map(d=>{
-    const name = d.file_name || "arquivo";
-    const cat = d.category || "outros";
-    const link = d.drive_web_view_link || "";
-    // formato de referência “bonito” e copiável
-    return `- [${cat}] ${name}${link ? ` (${link})` : ""}`;
+  const secData = comp.sections || {};
+  Object.entries(secData).forEach(([title, content]) => {
+    if (typeof content === 'object') content = JSON.stringify(content);
+    const div = document.createElement("div");
+    div.className = "alert";
+    div.style.background = "rgba(255,255,255,0.03)";
+    div.innerHTML = `<h4 style="color:var(--primary); margin-bottom:8px;">${title.replace(/_/g, ' ').toUpperCase()}</h4><p style="font-size:14px; line-height:1.6;">${content}</p>`;
+    sections.appendChild(div);
   });
 
-  const isTextarea = (el.refDocs?.tagName || "").toLowerCase() === "textarea";
+  sources.innerHTML = "";
+  (data.sources || []).forEach(s => {
+    const li = document.createElement("li");
+    li.style.fontSize = "12px";
+    li.style.padding = "8px";
+    li.style.background = "rgba(0,0,0,0.1)";
+    li.style.borderRadius = "4px";
+    li.innerHTML = `<strong>[${s.type?.toUpperCase() || 'LOCAL'}]</strong> ${s.meta || ''}<br/><span class="muted">${(s.excerpt || '').substring(0, 150)}...</span>`;
+    sources.appendChild(li);
+  });
+}
 
-  if (isTextarea){
-    // preenche “Anexos úteis” automaticamente, mas sem apagar se user já escreveu muito:
-    if (!el.refDocs.value.trim()){
-      el.refDocs.value = lines.join("\n");
-    } else {
-      // se já tem conteúdo, só adiciona uma seção
-      el.refDocs.value =
-        el.refDocs.value.trim() +
-        "\n\n" +
-        "— Docs do processo (auto) —\n" +
-        lines.join("\n");
-    }
-  } else {
-    // input: faz um resumo curto (pra não estourar)
-    const short = docs.slice(0, 3).map(d => d.file_name).filter(Boolean).join(" | ");
-    const more = docs.length > 3 ? ` (+${docs.length - 3})` : "";
-    if (!el.refDocs.value.trim()){
-      el.refDocs.value = `Docs: ${short}${more}`;
-    } else {
-      // não sobrescreve — só indica no status
-      setStatus(`Docs carregados (${docs.length}).`);
-    }
+async function generateFullPetition() {
+  const processId = document.getElementById("processSelect").value;
+  const mode = document.getElementById("modeSelect").value;
+  const style = document.getElementById("styleSelect").value;
+  const notes = document.getElementById("notesInput").value;
+  const hasAudio = document.getElementById("hasAudio").checked;
+  const audioNotes = document.getElementById("audioNotes").value;
+  const calculationValue = document.getElementById("calculationValue").value;
+
+  if (!processId) return alert("Selecione um processo.");
+
+  const btn = document.getElementById("btnGeneratePetition");
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redigindo Peça...';
+
+  try {
+    const res = await fetch(`${API}/rag/generate-petition`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({
+        process_id: parseInt(processId),
+        mode: mode,
+        style: style,
+        notes: notes,
+        has_audio: hasAudio,
+        audio_notes: audioNotes,
+        calculation_value: calculationValue
+      })
+    });
+    
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Erro na geração da peça.");
+
+    // No novo formato, data.draft contém o objeto da petição
+    showPetitionModal(data.draft, processId, mode);
+  } catch (e) {
+    alert(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
   }
 }
 
-// ===== processes =====
-async function loadProcesses(){
-  const res = await apiFetch(`/processes/`);
-  if (!res) return;
-  if (!res.ok){ alert(await readError(res)); return; }
-  processes = await res.json();
+async function downloadPetitionDocx(draft, processId, mode) {
+  const btn = document.getElementById("btnDownloadDocx");
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Criando Réplica...';
 
-  el.processSelect.innerHTML =
-    `<option value="">Selecione um processo</option>` +
-    processes.map(p=>{
-      const label = p.number ? `Processo ${p.number}` : `Processo #${p.id}`;
-      return `<option value="${p.id}">${escapeHtml(label)}</option>`;
-    }).join("");
+  try {
+    const res = await fetch(`${API}/rag/export-docx`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({
+        process_id: parseInt(processId),
+        mode: mode,
+        composition: draft // Enviamos o objeto completo para o mapeamento inteligente
+      })
+    });
+    
+    if (!res.ok) throw new Error("Erro ao exportar Word.");
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Replica_Peticao_${processId}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (e) {
+    alert(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
 }
 
-// ===== events =====
-el.processSelect.addEventListener("change", async ()=>{
-  selectedId = Number(el.processSelect.value || 0) || null;
-
-  clearForm();
-
-  if (!selectedId){
-    setStatus("Selecione um processo.");
-    return;
+function showPetitionModal(draft, processId, mode) {
+  let modal = document.getElementById("petitionModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "petitionModal";
+    modal.className = "modal-overlay";
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; background: var(--card-bg); padding: 32px; border-radius: 16px; border: 1px solid var(--card-border); position: relative;">
+        <button class="close-modal" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-secondary); font-size: 20px; cursor: pointer;"><i class="fas fa-times"></i></button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--card-border); padding-bottom: 16px;">
+          <h2 id="modalTitle" style="margin: 0; color: var(--primary);">Rascunho da Peça</h2>
+          <div style="display: flex; gap: 8px;">
+            <button id="btnDownloadDocx" class="secondary btn-small"><i class="fas fa-file-word"></i> Baixar Réplica .DOCX</button>
+            <button id="btnCopyFullText" class="primary btn-small"><i class="fas fa-copy"></i> Copiar Tudo</button>
+          </div>
+        </div>
+        <div id="modalBody" style="white-space: pre-wrap; font-family: 'Inter', sans-serif; line-height: 1.8; color: var(--text-main); font-size: 15px; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 8px;"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    modal.querySelector(".close-modal").onclick = () => modal.style.display = "none";
+    window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; };
   }
 
-  // 1) carrega rascunho local
-  loadLocal();
+  const fullText = draft.full_text || "Texto não gerado.";
+  document.getElementById("modalTitle").textContent = "Minuta de " + (mode === 'attack' ? 'Inicial' : 'Contestação');
+  document.getElementById("modalBody").textContent = fullText;
+  
+  document.getElementById("btnDownloadDocx").onclick = () => downloadPetitionDocx(draft, processId, mode);
+  document.getElementById("btnCopyFullText").onclick = () => {
+    navigator.clipboard.writeText(fullText);
+    alert("Copiado com sucesso!");
+  };
 
-  // 2) puxa docs do processo e preenche anexos úteis
-  setStatus("Carregando docs do processo...");
-  const docs = await loadDocsForProcess(selectedId);
-  applyDocsToRefDocs(docs);
+  modal.style.display = "flex";
+}
 
-  // 3) se não tinha nada no local e a gente preencheu anexos, salva
-  if (docs.length) saveLocal();
-
-  setStatus(`Processo selecionado ✅ (docs: ${docs.length})`);
-});
-
-el.btnNew.addEventListener("click", ()=>{
-  clearForm();
-  setStatus("Novo rascunho.");
-});
-
-el.btnSave.addEventListener("click", async ()=>{
-  if (!selectedId) return alert("Selecione um processo.");
-  saveLocal();
-
-  // FUTURO: plugar API
-});
-
-el.btnCopy.addEventListener("click", async ()=>{
-  await navigator.clipboard.writeText(el.draft.value || "");
-  setStatus("Copiado ✅");
-});
-
-el.btnExport.addEventListener("click", ()=>{
-  const text = el.draft.value || "";
-  const blob = new Blob([text], { type:"text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `ataque_defesa_${selectedId || "sem_processo"}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  setStatus("Exportado ✅");
-});
-
-// autosave local quando digitando (leve)
-let t = null;
-["input","change"].forEach(evt=>{
-  document.addEventListener(evt, ()=>{
-    if (!selectedId) return;
-    clearTimeout(t);
-    t = setTimeout(saveLocal, 600);
-  }, true);
-});
-
-(function init(){
-  if (!getToken()){ window.location.href="index.html"; return; }
+/* =====================
+   EVENT BINDINGS
+===================== */
+document.addEventListener("DOMContentLoaded", () => {
   loadProcesses();
-  setStatus("Pronto.");
-})();
+  
+  const hasAudioCheckbox = document.getElementById("hasAudio");
+  const audioDetailsDiv = document.getElementById("audioDetails");
+  if (hasAudioCheckbox && audioDetailsDiv) {
+      hasAudioCheckbox.addEventListener("change", () => {
+        audioDetailsDiv.style.display = hasAudioCheckbox.checked ? "block" : "none";
+      });
+  }
+
+  document.getElementById("btnCompose")?.addEventListener("click", generateStrategy);
+  document.getElementById("btnGeneratePetition")?.addEventListener("click", generateFullPetition);
+  
+  document.getElementById("btnCopyResult")?.addEventListener("click", () => {
+    if (currentComposition) {
+      const text = typeof currentComposition === 'string' ? currentComposition : JSON.stringify(currentComposition, null, 2);
+      navigator.clipboard.writeText(text);
+      alert("Estrutura copiada!");
+    }
+  });
+});

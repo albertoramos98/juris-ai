@@ -4,9 +4,18 @@ import os
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
 
+# Ajuste para Render/Railway que às vezes usam 'postgres://' mas o SQLAlchemy quer 'postgresql://'
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+connect_args = {}
+if "sqlite" in DATABASE_URL:
+    connect_args["check_same_thread"] = False
+
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    connect_args=connect_args,
+    pool_pre_ping=True # Evita erros de conexão perdida (comum no Supabase/Railway)
 )
 
 SessionLocal = sessionmaker(

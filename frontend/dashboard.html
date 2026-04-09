@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Dashboard - Juris AI</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body>
 
@@ -13,24 +14,21 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="brand">
-      <div>
-        <strong>Juris AI</strong><br/>
-        <span>Legal Ops • MVP</span>
-      </div>
-      <span style="width:10px;height:10px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 4px rgba(79,140,255,.18)"></span>
+      <div class="brand-icon"><i class="fas fa-balance-scale"></i></div>
+      <h2>Juris AI</h2>
     </div>
 
     <nav class="nav">
-      <a class="active" href="dashboard.html">🏠 Dashboard</a>
-      <a href="documents.html">📁 Documentos</a>
-      <a href="process.html">📌 Processos</a>
-      <a href="attacks.html">⚔️ Ataque & Defesa</a>
-      <a href="import.html">⬆️ Import CSV</a>
-      <a href="email.html">✉️ E-mails</a>
-
-      <div class="hint">
-        Dica: mantém cada módulo em uma página e deixa o <b>app.js</b> só pro dashboard.
-      </div>
+      <a class="active" href="dashboard.html"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a>
+      <a href="new-process.html"><i class="fas fa-plus-circle"></i> <span>Novo Processo</span></a>
+      <a href="process.html"><i class="fas fa-gavel"></i> <span>Processos</span></a>
+      <a href="documents.html"><i class="fas fa-folder-open"></i> <span>Documentos</span></a>
+      <a href="styles.html"><i class="fas fa-pen-nib"></i> <span>Treinar Estilo</span></a>
+      <a href="knowledge.html"><i class="fas fa-book"></i> <span>Biblioteca Jurídica</span></a>
+      <a href="attacks.html"><i class="fas fa-shield-halved"></i> <span>Ataque & Defesa</span></a>
+      <a href="meeting.html"><i class="fas fa-microphone"></i> <span>Reuniões</span></a>
+      <a href="import.html"><i class="fas fa-file-import"></i> <span>Importar</span></a>
+      <a href="team.html"><i class="fas fa-users"></i> <span>Equipe</span></a>
     </nav>
   </aside>
 
@@ -38,149 +36,127 @@
   <main class="main">
 
     <header class="topbar">
-      <h1>Dashboard</h1>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <button class="secondary" onclick="connectGoogleDrive()">Conectar Google Drive</button>
-        <button onclick="logout()">Sair</button>
+      <div>
+        <h1>Dashboard</h1>
+        <p style="color: var(--text-secondary); font-size: 14px;">Bem-vindo ao centro de comando do seu escritório.</p>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="secondary" onclick="connectGoogleDrive()"><i class="fab fa-google-drive"></i> Google Drive</button>
+        <button class="danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</button>
       </div>
     </header>
 
-    <section id="office-status" class="statusbar">
-      <div class="status-left">
-        <span id="status-dot" class="dot"></span>
-        <strong id="status-title">Carregando status...</strong>
-        <span id="status-sub" class="muted"></span>
-      </div>
-
-      <div class="status-right">
-        <span class="pill">Abertos: <b id="st-open-total">0</b></span>
-        <span class="pill">Críticos abertos: <b id="st-open-critical">0</b></span>
-        <span class="pill">Vencidos: <b id="st-overdue-total">0</b></span>
-        <span class="pill danger">Críticos vencidos: <b id="st-overdue-critical">0</b></span>
-      </div>
-    </section>
-
-    <section class="cards">
-      <div class="card">
-        <h3>Clientes</h3>
-        <span id="clients-count">0</span>
-      </div>
-      <div class="card">
-        <h3>Processos</h3>
-        <span id="processes-count">0</span>
-      </div>
-      <div class="card">
-        <h3>Prazos</h3>
-        <span id="deadlines-count">0</span>
-      </div>
-    </section>
-
-    <section class="grid">
-
-      <div class="box">
-        <h2>Clientes</h2>
-        <div class="form-box">
-          <h3>Novo Cliente</h3>
-          <input id="client-name" placeholder="Nome do cliente" />
-          <input id="client-doc" placeholder="CPF/CNPJ" />
-          <input id="client-email" placeholder="E-mail (ex: cliente@dominio.com)" />
-          <button onclick="createClient()">Criar Cliente</button>
+    <!-- STATUS DO ESCRITÓRIO -->
+    <div class="panel" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);">
+      <div id="office-status" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div id="status-dot" class="badge" style="width: 12px; height: 12px; padding: 0;"></div>
+          <div>
+            <h3 id="status-title" style="font-size: 16px; margin: 0;">Carregando status...</h3>
+            <p id="status-sub" style="font-size: 13px; color: var(--text-secondary); margin: 0;"></p>
+          </div>
         </div>
-        <ul id="clients-list"></ul>
-      </div>
-
-      <div class="box">
-        <h2>Processos</h2>
-        <div class="form-box">
-          <h3>Novo Processo</h3>
-          <input id="process-number" placeholder="Número do processo" />
-          <input id="process-court" placeholder="Vara" />
-          <input id="process-type" placeholder="Tipo de ação" />
-
-          <select id="process-client-select">
-            <option value="">Selecione o cliente</option>
-          </select>
-
-          <button onclick="createProcess()">Criar Processo</button>
+        <div style="display: flex; gap: 12px;">
+          <div class="badge badge-active">Abertos: <span id="st-open-total">0</span></div>
+          <div class="badge badge-pending">Vencidos: <span id="st-overdue-total">0</span></div>
         </div>
-        <ul id="processes-list"></ul>
-      </div>
-
-      <div class="box">
-        <h2>Prazos</h2>
-        <div class="form-box">
-          <h3>Novo Prazo</h3>
-          <input id="deadline-desc" placeholder="Descrição" />
-          <input id="deadline-date" type="date" />
-          <input id="deadline-resp" placeholder="Responsável" />
-
-          <label class="checkbox">
-            <input id="deadline-critical" type="checkbox" />
-            Prazo crítico
-          </label>
-
-          <select id="deadline-process-select">
-            <option value="">Selecione o processo</option>
-          </select>
-
-          <button onclick="createDeadline()">Criar Prazo</button>
-        </div>
-
-        <ul id="deadlines-list"></ul>
-      </div>
-
-    </section>
-
-    <!-- OVERLAY DE BLOQUEIO -->
-    <div id="lock-overlay" style="display:none;">
-      <div class="lock-box">
-        <h2>⛔ ESCRITÓRIO BLOQUEADO</h2>
-
-        <p id="lock-message" style="margin-top: 8px;">
-          Existe prazo crítico vencido não concluído.
-        </p>
-
-        <div style="margin-top: 12px;">
-          <h3 style="margin: 0 0 8px 0;">Críticos vencidos</h3>
-          <ul id="lock-deadlines" style="margin:0; padding-left: 18px;"></ul>
-        </div>
-
-        <hr style="margin: 16px 0; opacity: 0.2;" />
-
-        <div>
-          <h3 style="margin: 0 0 8px 0;">Desbloquear (Owner)</h3>
-
-          <input id="unlock-password" type="password" placeholder="Senha de desbloqueio"
-                 style="width:100%; margin-bottom: 8px;" />
-
-          <input id="unlock-reason" placeholder="Motivo (opcional)"
-                 style="width:100%; margin-bottom: 8px;" />
-
-          <input id="unlock-minutes" type="number" min="5" max="720" value="30"
-                 placeholder="Minutos (padrão 30)"
-                 style="width:100%; margin-bottom: 8px;" />
-
-          <button onclick="unlockOffice()" style="width:100%;">🔓 Desbloquear por override</button>
-
-          <p id="unlock-error" style="margin: 10px 0 0; color: #ff8a8a; display:none;"></p>
-
-          <p style="opacity:0.8; margin-top: 12px; font-size: 14px;">
-            *Se você não for owner, vai dar 403. O desbloqueio dura alguns minutos.
-          </p>
-        </div>
-
-        <div style="display:flex; gap:10px; margin-top: 16px;">
-          <button onclick="location.reload()" class="secondary">Recarregar</button>
-          <button onclick="logout()" class="danger">Sair</button>
-        </div>
-
-        <p style="opacity:0.8; margin-top: 12px; font-size: 14px;">
-          Para destravar definitivo: conclua o(s) prazo(s) crítico(s) vencido(s).
-        </p>
       </div>
     </div>
 
-    <script type="module" src="app.js"></script>
+    <!-- KPIs -->
+    <div class="card-grid">
+      <div class="kpi-card">
+        <p class="kpi-label">Total de Clientes</p>
+        <span class="kpi-value" id="clients-count">0</span>
+        <p class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> Base de dados ativa</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Processos Ativos</p>
+        <span class="kpi-value" id="processes-count">0</span>
+        <p class="kpi-trend"><i class="fas fa-sync"></i> Sincronizado com RAG</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Prazos Pendentes</p>
+        <span class="kpi-value" id="deadlines-count">0</span>
+        <p class="kpi-trend" style="color: var(--gold);"><i class="fas fa-clock"></i> Requer atenção</p>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+      
+      <!-- COLUNA ESQUERDA -->
+      <div>
+        <!-- ALERTAS DE PRAZOS -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title"><i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> Alertas de Prazos</h3>
+            <button class="secondary btn-small" onclick="location.href='process.html'">Gerenciar Prazos</button>
+          </div>
+          <ul id="deadlines-list" style="list-style: none;">
+            <li class="muted">Carregando prazos...</li>
+          </ul>
+        </div>
+
+        <!-- PROCESSOS RECENTES -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title"><i class="fas fa-history"></i> Processos Recentes</h3>
+            <button class="secondary btn-small" onclick="location.href='process.html'">Ver Todos</button>
+          </div>
+          <ul id="processes-list" style="list-style: none;"></ul>
+        </div>
+      </div>
+
+      <!-- COLUNA DIREITA (ATALHOS) -->
+      <div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Ações Rápidas</h3>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="primary" style="width: 100%; justify-content: center;" onclick="location.href='new-process.html'"><i class="fas fa-plus"></i> Novo Processo</button>
+            <button class="secondary" style="width: 100%; justify-content: center;" onclick="location.href='meeting.html'"><i class="fas fa-microphone"></i> Iniciar Reunião</button>
+            <button class="secondary" style="width: 100%; justify-content: center;" onclick="location.href='import.html'"><i class="fas fa-upload"></i> Importar CSV</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Configurações</h3>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Mantenha seu escritório atualizado.</p>
+          <button class="secondary btn-small" style="width: 100%;" onclick="location.reload()"><i class="fas fa-sync-alt"></i> Sincronizar Tudo</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- OVERLAY DE BLOQUEIO (MANTIDO PELA REGRA DE NEGÓCIO) -->
+    <div id="lock-overlay" style="display:none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+      <div class="panel" style="max-width: 500px; border-color: var(--danger); background: var(--bg);">
+        <h2 style="color: var(--danger); margin-bottom: 16px;"><i class="fas fa-lock"></i> ESCRITÓRIO BLOQUEADO</h2>
+        <p id="lock-message" style="margin-bottom: 16px;">Existe prazo crítico vencido não concluído.</p>
+        <ul id="lock-deadlines" style="margin-bottom: 24px; color: var(--text-secondary);"></ul>
+        
+        <div class="form-group">
+          <label>Senha de Desbloqueio (Owner)</label>
+          <input id="unlock-password" type="password" placeholder="Digite a senha..." />
+        </div>
+        <button onclick="unlockOffice()" class="primary" style="width: 100%; margin-bottom: 12px;">🔓 Desbloquear por Override</button>
+        <div style="display: flex; gap: 12px;">
+          <button onclick="location.reload()" class="secondary" style="flex: 1;">Recarregar</button>
+          <button onclick="logout()" class="danger" style="flex: 1;">Sair</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="storage.js"></script>
+    <script src="auth.js"></script>
+    <script src="dom.js"></script>
+    <script src="http.js"></script>
+    <script src="app.js"></script>
   </main>
 </div>
 

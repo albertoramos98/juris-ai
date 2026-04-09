@@ -4,6 +4,7 @@ from app.core.settings import settings
 
 def send_email_smtp(to_email: str, subject: str, body: str) -> None:
     if not settings.smtp_host or not settings.smtp_from:
+        print("[SMTP] Falha: Host ou Remetente não configurados no .env")
         raise RuntimeError("smtp_host e smtp_from precisam estar definidos no .env")
 
     msg = EmailMessage()
