@@ -16,7 +16,7 @@
       "dest": "app/main.py"
     },
     {
-      "src": "/(auth/.*)",
+      "src": "/(system|auth|clients|processes|deadlines|offices|google|documents|imports|emails|email_flows|users|rag|meetings|styles|global_knowledge)(.*)",
       "dest": "app/main.py"
     },
     {
@@ -26,6 +26,18 @@
     {
       "src": "/openapi.json",
       "dest": "app/main.py"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "frontend/favicon.ico"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "frontend/assets/$1"
+    },
+    {
+      "src": "/(.*)\\.(js|css|png|jpg|jpeg|gif|svg|html)",
+      "dest": "frontend/$1.$2"
     },
     {
       "src": "/(.*)",
